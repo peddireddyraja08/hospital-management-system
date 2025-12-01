@@ -8,11 +8,14 @@ import PatientList from './pages/patients/PatientList';
 import PatientForm from './pages/patients/PatientForm';
 import PatientDetails from './pages/patients/PatientDetails';
 import DoctorList from './pages/doctors/DoctorList';
+import DoctorForm from './pages/doctors/DoctorForm';
 import AppointmentList from './pages/appointments/AppointmentList';
 import MedicalRecordsList from './pages/medical-records/MedicalRecordsList';
 import LabTestsList from './pages/lab/LabTestsList';
 import PharmacyDashboard from './pages/pharmacy/PharmacyDashboard';
 import BillingDashboard from './pages/billing/BillingDashboard';
+import BedManagement from './pages/beds/BedManagement';
+import StaffManagement from './pages/staff/StaffManagement';
 import PrivateRoute from './components/PrivateRoute';
 import Layout from './components/Layout';
 
@@ -41,7 +44,11 @@ function App() {
             <Route path="patients/:id" element={<PatientDetails />} />
             <Route path="patients/:id/edit" element={<PatientForm />} />
             <Route path="doctors" element={<DoctorList />} />
+            <Route path="doctors/new" element={<DoctorForm />} />
+            <Route path="doctors/edit/:id" element={<DoctorForm />} />
+            <Route path="staff" element={<StaffManagement />} />
             <Route path="appointments" element={<AppointmentList />} />
+            <Route path="beds" element={<BedManagement />} />
             <Route path="medical-records" element={<MedicalRecordsList />} />
             <Route path="lab-tests" element={<LabTestsList />} />
             <Route path="pharmacy" element={<PharmacyDashboard />} />

@@ -23,6 +23,8 @@ import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
 import ScienceIcon from '@mui/icons-material/Science';
 import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy';
 import PaymentIcon from '@mui/icons-material/Payment';
+import HotelIcon from '@mui/icons-material/Hotel';
+import BadgeIcon from '@mui/icons-material/Badge';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../context/AuthContext';
 
@@ -32,7 +34,9 @@ const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
   { text: 'Patients', icon: <PeopleIcon />, path: '/patients' },
   { text: 'Doctors', icon: <LocalHospitalIcon />, path: '/doctors' },
+  { text: 'Staff', icon: <BadgeIcon />, path: '/staff' },
   { text: 'Appointments', icon: <CalendarTodayIcon />, path: '/appointments' },
+  { text: 'Bed Management', icon: <HotelIcon />, path: '/beds' },
   { text: 'Medical Records', icon: <MedicalServicesIcon />, path: '/medical-records' },
   { text: 'Lab Tests', icon: <ScienceIcon />, path: '/lab-tests' },
   { text: 'Pharmacy', icon: <LocalPharmacyIcon />, path: '/pharmacy' },

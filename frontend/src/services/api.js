@@ -86,4 +86,134 @@ export const physicianOrderAPI = {
   cancel: (id) => api.delete(`/physician-orders/${id}/cancel`),
 };
 
+// Doctor API
+export const doctorAPI = {
+  getAll: () => api.get('/doctors'),
+  getById: (id) => api.get(`/doctors/${id}`),
+  getByDoctorId: (doctorId) => api.get(`/doctors/doctorId/${doctorId}`),
+  getBySpecialization: (specialization) => api.get(`/doctors/specialization/${specialization}`),
+  searchByEmail: (email) => api.get(`/doctors/email/${email}`),
+  create: (doctor) => api.post('/doctors', doctor),
+  update: (id, doctor) => api.put(`/doctors/${id}`, doctor),
+  delete: (id) => api.delete(`/doctors/${id}`),
+};
+
+// Staff API
+export const staffAPI = {
+  getAll: () => api.get('/staff'),
+  getById: (id) => api.get(`/staff/${id}`),
+  getByStaffId: (staffId) => api.get(`/staff/staffId/${staffId}`),
+  getByDepartment: (department) => api.get(`/staff/department/${department}`),
+  getByDesignation: (designation) => api.get(`/staff/designation/${designation}`),
+  searchByEmail: (email) => api.get(`/staff/email/${email}`),
+  create: (staff) => api.post('/staff', staff),
+  update: (id, staff) => api.put(`/staff/${id}`, staff),
+  delete: (id) => api.delete(`/staff/${id}`),
+};
+
+// Appointment API
+export const appointmentAPI = {
+  getAll: () => api.get('/appointments'),
+  getById: (id) => api.get(`/appointments/${id}`),
+  getByPatient: (patientId) => api.get(`/appointments/patient/${patientId}`),
+  getByDoctor: (doctorId) => api.get(`/appointments/doctor/${doctorId}`),
+  getByStatus: (status) => api.get(`/appointments/status/${status}`),
+  getByDateRange: (start, end) => api.get('/appointments/date-range', { params: { start, end } }),
+  getDoctorAppointmentsByDate: (doctorId, start, end) => 
+    api.get(`/appointments/doctor/${doctorId}/date-range`, { params: { start, end } }),
+  create: (appointment) => api.post('/appointments', appointment),
+  update: (id, appointment) => api.put(`/appointments/${id}`, appointment),
+  updateStatus: (id, status) => api.patch(`/appointments/${id}/status`, null, { params: { status } }),
+  cancel: (id) => api.post(`/appointments/${id}/cancel`),
+  complete: (id) => api.post(`/appointments/${id}/complete`),
+};
+
+// Bed API
+export const bedAPI = {
+  getAll: () => api.get('/beds'),
+  getById: (id) => api.get(`/beds/${id}`),
+  getByBedNumber: (bedNumber) => api.get(`/beds/bedNumber/${bedNumber}`),
+  getByStatus: (status) => api.get(`/beds/status/${status}`),
+  getAvailable: () => api.get('/beds/available'),
+  getByWard: (wardName) => api.get(`/beds/ward/${wardName}`),
+  getByType: (bedType) => api.get(`/beds/type/${bedType}`),
+  getAvailableByWard: (wardName) => api.get(`/beds/ward/${wardName}/available`),
+  create: (bed) => api.post('/beds', bed),
+  update: (id, bed) => api.put(`/beds/${id}`, bed),
+  delete: (id) => api.delete(`/beds/${id}`),
+  admitPatient: (bedId, patientId) => api.post(`/beds/${bedId}/admit/${patientId}`),
+  dischargePatient: (bedId) => api.post(`/beds/${bedId}/discharge`),
+  transferPatient: (fromBedId, toBedId) => api.post('/beds/transfer', null, { params: { fromBedId, toBedId } }),
+  markForMaintenance: (bedId) => api.post(`/beds/${bedId}/maintenance`),
+  markAsAvailable: (bedId) => api.post(`/beds/${bedId}/available`),
+};
+
+// Lab Test API
+export const labTestAPI = {
+  getAll: () => api.get('/lab-tests'),
+  getById: (id) => api.get(`/lab-tests/${id}`),
+  getByTestCode: (testCode) => api.get(`/lab-tests/test-code/${testCode}`),
+  getByCategory: (category) => api.get(`/lab-tests/category/${category}`),
+  create: (labTest) => api.post('/lab-tests', labTest),
+  update: (id, labTest) => api.put(`/lab-tests/${id}`, labTest),
+  delete: (id) => api.delete(`/lab-tests/${id}`),
+};
+
+// Lab Test Request API
+export const labTestRequestAPI = {
+  getAll: () => api.get('/lab-test-requests'),
+  getById: (id) => api.get(`/lab-test-requests/${id}`),
+  getByPatient: (patientId) => api.get(`/lab-test-requests/patient/${patientId}`),
+  getByDoctor: (doctorId) => api.get(`/lab-test-requests/doctor/${doctorId}`),
+  getByStatus: (status) => api.get(`/lab-test-requests/status/${status}`),
+  create: (request) => api.post('/lab-test-requests', request),
+  update: (id, request) => api.put(`/lab-test-requests/${id}`, request),
+  updateStatus: (id, status) => api.patch(`/lab-test-requests/${id}/status`, null, { params: { status } }),
+  addResult: (id, result) => api.post(`/lab-test-requests/${id}/result`, result),
+  verifyResult: (id) => api.post(`/lab-test-requests/${id}/verify`),
+};
+
+// Medication API
+export const medicationAPI = {
+  getAll: () => api.get('/medications'),
+  getById: (id) => api.get(`/medications/${id}`),
+  getByMedicationCode: (code) => api.get(`/medications/code/${code}`),
+  getByCategory: (category) => api.get(`/medications/category/${category}`),
+  getLowStock: () => api.get('/medications/low-stock'),
+  create: (medication) => api.post('/medications', medication),
+  update: (id, medication) => api.put(`/medications/${id}`, medication),
+  updateStock: (id, quantity) => api.patch(`/medications/${id}/stock`, null, { params: { quantity } }),
+  delete: (id) => api.delete(`/medications/${id}`),
+};
+
+// Prescription API
+export const prescriptionAPI = {
+  getAll: () => api.get('/prescriptions'),
+  getById: (id) => api.get(`/prescriptions/${id}`),
+  getByPatient: (patientId) => api.get(`/prescriptions/patient/${patientId}`),
+  getByDoctor: (doctorId) => api.get(`/prescriptions/doctor/${doctorId}`),
+  getByStatus: (status) => api.get(`/prescriptions/status/${status}`),
+  create: (prescription) => api.post('/prescriptions', prescription),
+  update: (id, prescription) => api.put(`/prescriptions/${id}`, prescription),
+  dispense: (id) => api.post(`/prescriptions/${id}/dispense`),
+  partialDispense: (id, quantity) => api.post(`/prescriptions/${id}/partial-dispense`, null, { params: { quantity } }),
+};
+
+// Bill API
+export const billAPI = {
+  getAll: () => api.get('/bills'),
+  getById: (id) => api.get(`/bills/${id}`),
+  getByBillNumber: (billNumber) => api.get(`/bills/bill-number/${billNumber}`),
+  getByPatient: (patientId) => api.get(`/bills/patient/${patientId}`),
+  getByStatus: (status) => api.get(`/bills/status/${status}`),
+  create: (bill) => api.post('/bills', bill),
+  update: (id, bill) => api.put(`/bills/${id}`, bill),
+  addPayment: (id, payment) => api.post(`/bills/${id}/payment`, payment),
+  processInsuranceClaim: (id) => api.post(`/bills/${id}/insurance/claim`),
+  approveInsuranceClaim: (id, approvedAmount) => 
+    api.post(`/bills/${id}/insurance/approve`, null, { params: { approvedAmount } }),
+  rejectInsuranceClaim: (id, reason) => 
+    api.post(`/bills/${id}/insurance/reject`, null, { params: { reason } }),
+};
+
 export default api;
