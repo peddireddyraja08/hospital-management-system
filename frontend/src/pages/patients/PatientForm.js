@@ -1,0 +1,251 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Paper,
+  TextField,
+  Typography,
+  Grid,
+  MenuItem,
+} from '@mui/material';
+import { patientAPI } from '../../services/api';
+
+export default function PatientForm() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [patient, setPatient] = useState({
+    firstName: '',
+    lastName: '',
+    dateOfBirth: '',
+    gender: '',
+    bloodGroup: '',
+    phoneNumber: '',
+    email: '',
+    address: '',
+    emergencyContactName: '',
+    emergencyContactNumber: '',
+    insuranceNumber: '',
+    insuranceProvider: '',
+    allergies: '',
+    medicalHistory: '',
+  });
+
+  useEffect(() => {
+    if (id) {
+      fetchPatient();
+    }
+  }, [id]);
+
+  const fetchPatient = async () => {
+    try {
+      const response = await patientAPI.getById(id);
+      setPatient(response.data.data);
+    } catch (error) {
+      console.error('Error fetching patient:', error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (id) {
+        await patientAPI.update(id, patient);
+      } else {
+        await patientAPI.create(patient);
+      }
+      navigate('/patients');
+    } catch (error) {
+      console.error('Error saving patient:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setPatient({ ...patient, [e.target.name]: e.target.value });
+  };
+
+  return (
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        {id ? 'Edit Patient' : 'Add New Patient'}
+      </Typography>
+
+      <Paper sx={{ p: 3 }}>
+        <form onSubmit={handleSubmit}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                label="First Name"
+                name="firstName"
+                value={patient.firstName}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                label="Last Name"
+                name="lastName"
+                value={patient.lastName}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Date of Birth"
+                name="dateOfBirth"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={patient.dateOfBirth}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                select
+                label="Gender"
+                name="gender"
+                value={patient.gender}
+                onChange={handleChange}
+              >
+                <MenuItem value="MALE">Male</MenuItem>
+                <MenuItem value="FEMALE">Female</MenuItem>
+                <MenuItem value="OTHER">Other</MenuItem>
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                select
+                label="Blood Group"
+                name="bloodGroup"
+                value={patient.bloodGroup}
+                onChange={handleChange}
+              >
+                {['A_POSITIVE', 'A_NEGATIVE', 'B_POSITIVE', 'B_NEGATIVE', 
+                  'AB_POSITIVE', 'AB_NEGATIVE', 'O_POSITIVE', 'O_NEGATIVE'].map(bg => (
+                  <MenuItem key={bg} value={bg}>{bg.replace('_', ' ')}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Phone Number"
+                name="phoneNumber"
+                value={patient.phoneNumber}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                type="email"
+                value={patient.email}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Address"
+                name="address"
+                multiline
+                rows={2}
+                value={patient.address}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Emergency Contact Name"
+                name="emergencyContactName"
+                value={patient.emergencyContactName}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Emergency Contact Number"
+                name="emergencyContactNumber"
+                value={patient.emergencyContactNumber}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Insurance Number"
+                name="insuranceNumber"
+                value={patient.insuranceNumber}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Insurance Provider"
+                name="insuranceProvider"
+                value={patient.insuranceProvider}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Allergies"
+                name="allergies"
+                multiline
+                rows={2}
+                value={patient.allergies}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Medical History"
+                name="medicalHistory"
+                multiline
+                rows={3}
+                value={patient.medicalHistory}
+                onChange={handleChange}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Box display="flex" gap={2}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => navigate('/patients')}
+                >
+                  Cancel
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
+        </form>
+      </Paper>
+    </Box>
+  );
+}
