@@ -16,7 +16,7 @@ import {
   TextField,
   MenuItem,
 } from '@mui/material';
-import { Edit, Delete, Add } from '@mui/icons-material';
+import { Edit, Delete, Add, ToggleOff, ToggleOn } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { doctorAPI } from '../../services/api';
 
@@ -25,6 +25,7 @@ export default function DoctorList() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [specializationFilter, setSpecializationFilter] = useState('');
 
   useEffect(() => {
@@ -46,12 +47,28 @@ export default function DoctorList() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this doctor?')) {
+    if (window.confirm('Are you sure you want to remove this doctor from the system? This action cannot be undone.')) {
       try {
         await doctorAPI.delete(id);
+        setSuccess('Doctor removed successfully from the system');
         loadDoctors();
       } catch (err) {
-        setError('Failed to delete doctor');
+        setError(err.response?.data?.message || 'Failed to delete doctor');
+      }
+    }
+  };
+
+  const handleToggleStatus = async (doctor) => {
+    const action = doctor.isActive ? 'deactivate' : 'activate';
+    if (window.confirm(`Are you sure you want to ${action} this doctor?`)) {
+      try {
+        const updatedDoctor = { ...doctor, isActive: !doctor.isActive };
+        await doctorAPI.update(doctor.id, updatedDoctor);
+        setSuccess(`Doctor ${action}d successfully`);
+        loadDoctors();
+      } catch (err) {
+        setError(err.response?.data?.message || `Failed to ${action} doctor`);
+        console.error('Toggle status error:', err);
       }
     }
   };
@@ -63,13 +80,14 @@ export default function DoctorList() {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => navigate('/dashboard/doctors/new')}
+          onClick={() => navigate('/doctors/new')}
         >
           Add Doctor
         </Button>
       </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
       <Box sx={{ mb: 3 }}>
         <TextField
@@ -85,6 +103,11 @@ export default function DoctorList() {
           <MenuItem value="Pediatrics">Pediatrics</MenuItem>
           <MenuItem value="Orthopedics">Orthopedics</MenuItem>
           <MenuItem value="General Medicine">General Medicine</MenuItem>
+          <MenuItem value="Dermatology">Dermatology</MenuItem>
+          <MenuItem value="Gynecology">Gynecology</MenuItem>
+          <MenuItem value="Psychiatry">Psychiatry</MenuItem>
+          <MenuItem value="Radiology">Radiology</MenuItem>
+          <MenuItem value="Anesthesiology">Anesthesiology</MenuItem>
         </TextField>
       </Box>
 
@@ -132,14 +155,24 @@ export default function DoctorList() {
                   <TableCell>
                     <IconButton
                       size="small"
-                      onClick={() => navigate(`/dashboard/doctors/edit/${doctor.id}`)}
+                      onClick={() => navigate(`/doctors/edit/${doctor.id}`)}
+                      title="Edit Doctor"
                     >
                       <Edit />
                     </IconButton>
                     <IconButton
                       size="small"
+                      color={doctor.isActive ? 'warning' : 'success'}
+                      onClick={() => handleToggleStatus(doctor)}
+                      title={doctor.isActive ? 'Deactivate' : 'Activate'}
+                    >
+                      {doctor.isActive ? <ToggleOff /> : <ToggleOn />}
+                    </IconButton>
+                    <IconButton
+                      size="small"
                       color="error"
                       onClick={() => handleDelete(doctor.id)}
+                      title="Delete Doctor"
                     >
                       <Delete />
                     </IconButton>

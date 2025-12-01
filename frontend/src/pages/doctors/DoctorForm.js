@@ -62,16 +62,23 @@ export default function DoctorForm() {
     setSuccess('');
 
     try {
+      const doctorData = {
+        ...formData,
+        yearsOfExperience: formData.yearsOfExperience ? parseInt(formData.yearsOfExperience) : null,
+        consultationFee: formData.consultationFee ? parseFloat(formData.consultationFee) : null,
+      };
+      
       if (id) {
-        await doctorAPI.update(id, formData);
+        await doctorAPI.update(id, doctorData);
         setSuccess('Doctor updated successfully');
       } else {
-        await doctorAPI.create(formData);
+        await doctorAPI.create(doctorData);
         setSuccess('Doctor created successfully');
       }
-      setTimeout(() => navigate('/dashboard/doctors'), 1500);
+      setTimeout(() => navigate('/doctors'), 1500);
     } catch (err) {
       setError(err.response?.data?.message || 'Operation failed');
+      console.error('Doctor form error:', err);
     } finally {
       setLoading(false);
     }
@@ -113,11 +120,13 @@ export default function DoctorForm() {
               <TextField
                 fullWidth
                 select
+                required
                 label="Gender"
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
               >
+                <MenuItem value="">Select Gender</MenuItem>
                 <MenuItem value="MALE">Male</MenuItem>
                 <MenuItem value="FEMALE">Female</MenuItem>
                 <MenuItem value="OTHER">Other</MenuItem>
@@ -159,11 +168,24 @@ export default function DoctorForm() {
               <TextField
                 fullWidth
                 required
+                select
                 label="Specialization"
                 name="specialization"
                 value={formData.specialization}
                 onChange={handleChange}
-              />
+              >
+                <MenuItem value="">Select Specialization</MenuItem>
+                <MenuItem value="Cardiology">Cardiology</MenuItem>
+                <MenuItem value="Neurology">Neurology</MenuItem>
+                <MenuItem value="Pediatrics">Pediatrics</MenuItem>
+                <MenuItem value="Orthopedics">Orthopedics</MenuItem>
+                <MenuItem value="General Medicine">General Medicine</MenuItem>
+                <MenuItem value="Dermatology">Dermatology</MenuItem>
+                <MenuItem value="Gynecology">Gynecology</MenuItem>
+                <MenuItem value="Psychiatry">Psychiatry</MenuItem>
+                <MenuItem value="Radiology">Radiology</MenuItem>
+                <MenuItem value="Anesthesiology">Anesthesiology</MenuItem>
+              </TextField>
             </Grid>
             <Grid item xs={12} md={6}>
               <TextField
@@ -226,7 +248,7 @@ export default function DoctorForm() {
                 </Button>
                 <Button
                   variant="outlined"
-                  onClick={() => navigate('/dashboard/doctors')}
+                  onClick={() => navigate('/doctors')}
                 >
                   Cancel
                 </Button>

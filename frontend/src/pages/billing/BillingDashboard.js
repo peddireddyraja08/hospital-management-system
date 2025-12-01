@@ -18,17 +18,32 @@ import {
   DialogActions,
   TextField,
   Grid,
+  MenuItem,
 } from '@mui/material';
-import { billAPI } from '../../services/api';
+import { Add } from '@mui/icons-material';
+import { billAPI, patientAPI } from '../../services/api';
 
 export default function BillingDashboard() {
   const [bills, setBills] = useState([]);
+  const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
+  const [openBillDialog, setOpenBillDialog] = useState(false);
   const [selectedBill, setSelectedBill] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
+  const [billFormData, setBillFormData] = useState({
+    patientId: '',
+    billDate: new Date().toISOString().split('T')[0],
+    consultationCharges: '',
+    labCharges: '',
+    medicationCharges: '',
+    roomCharges: '',
+    procedureCharges: '',
+    otherCharges: '',
+  });
 
   useEffect(() => {
     loadBills();
@@ -37,10 +52,14 @@ export default function BillingDashboard() {
   const loadBills = async () => {
     try {
       setLoading(true);
-      const response = await billAPI.getAll();
-      setBills(response.data.data);
+      const [billsRes, patientsRes] = await Promise.all([
+        billAPI.getAll(),
+        patientAPI.getAll(),
+      ]);
+      setBills(billsRes.data.data);
+      setPatients(patientsRes.data.data);
     } catch (err) {
-      setError('Failed to load bills');
+      setError('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -52,11 +71,56 @@ export default function BillingDashboard() {
         amount: parseFloat(paymentAmount),
         paymentMethod: paymentMethod,
       });
+      setSuccess('Payment added successfully');
       setOpenPaymentDialog(false);
       setPaymentAmount('');
       loadBills();
     } catch (err) {
       setError('Failed to add payment');
+    }
+  };
+
+  const handleOpenBillDialog = () => {
+    setOpenBillDialog(true);
+    setBillFormData({
+      patientId: '',
+      billDate: new Date().toISOString().split('T')[0],
+      consultationCharges: '',
+      labCharges: '',
+      medicationCharges: '',
+      roomCharges: '',
+      procedureCharges: '',
+      otherCharges: '',
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  const handleBillChange = (e) => {
+    setBillFormData({
+      ...billFormData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleBillSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const billData = {
+        patient: { id: billFormData.patientId },
+        consultationCharges: parseFloat(billFormData.consultationCharges) || 0,
+        labCharges: parseFloat(billFormData.labCharges) || 0,
+        medicationCharges: parseFloat(billFormData.medicationCharges) || 0,
+        roomCharges: parseFloat(billFormData.roomCharges) || 0,
+        procedureCharges: parseFloat(billFormData.procedureCharges) || 0,
+        otherCharges: parseFloat(billFormData.otherCharges) || 0,
+      };
+      await billAPI.create(billData);
+      setSuccess('Bill created successfully');
+      setOpenBillDialog(false);
+      loadBills();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create bill');
     }
   };
 
@@ -71,11 +135,17 @@ export default function BillingDashboard() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Billing Dashboard
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4">
+          Billing Dashboard
+        </Typography>
+        <Button variant="contained" startIcon={<Add />} onClick={handleOpenBillDialog}>
+          Create Bill
+        </Button>
+      </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
       <TableContainer component={Paper}>
         <Table>
@@ -134,6 +204,119 @@ export default function BillingDashboard() {
         </Table>
       </TableContainer>
 
+      {/* Create Bill Dialog */}
+      <Dialog open={openBillDialog} onClose={() => setOpenBillDialog(false)} maxWidth="md" fullWidth>
+        <form onSubmit={handleBillSubmit}>
+          <DialogTitle>Create New Bill</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Patient"
+                  name="patientId"
+                  value={billFormData.patientId}
+                  onChange={handleBillChange}
+                  required
+                >
+                  {patients.map((patient) => (
+                    <MenuItem key={patient.id} value={patient.id}>
+                      {patient.firstName} {patient.lastName} ({patient.patientId})
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Bill Date"
+                  name="billDate"
+                  type="date"
+                  value={billFormData.billDate}
+                  onChange={handleBillChange}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Consultation Charges"
+                  name="consultationCharges"
+                  type="number"
+                  value={billFormData.consultationCharges}
+                  onChange={handleBillChange}
+                  inputProps={{ min: 0, step: 0.01 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Lab Charges"
+                  name="labCharges"
+                  type="number"
+                  value={billFormData.labCharges}
+                  onChange={handleBillChange}
+                  inputProps={{ min: 0, step: 0.01 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Medication Charges"
+                  name="medicationCharges"
+                  type="number"
+                  value={billFormData.medicationCharges}
+                  onChange={handleBillChange}
+                  inputProps={{ min: 0, step: 0.01 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Room Charges"
+                  name="roomCharges"
+                  type="number"
+                  value={billFormData.roomCharges}
+                  onChange={handleBillChange}
+                  inputProps={{ min: 0, step: 0.01 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Procedure Charges"
+                  name="procedureCharges"
+                  type="number"
+                  value={billFormData.procedureCharges}
+                  onChange={handleBillChange}
+                  inputProps={{ min: 0, step: 0.01 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Other Charges"
+                  name="otherCharges"
+                  type="number"
+                  value={billFormData.otherCharges}
+                  onChange={handleBillChange}
+                  inputProps={{ min: 0, step: 0.01 }}
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenBillDialog(false)}>Cancel</Button>
+            <Button type="submit" variant="contained">
+              Create Bill
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Add Payment Dialog */}
       <Dialog open={openPaymentDialog} onClose={() => setOpenPaymentDialog(false)}>
         <DialogTitle>Add Payment for {selectedBill?.billNumber}</DialogTitle>
         <DialogContent>

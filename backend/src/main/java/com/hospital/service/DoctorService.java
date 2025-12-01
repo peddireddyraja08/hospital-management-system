@@ -18,6 +18,17 @@ public class DoctorService {
     private final DoctorRepository doctorRepository;
 
     public Doctor createDoctor(Doctor doctor) {
+        // Check if email already exists (excluding deleted records)
+        if (doctorRepository.existsByEmailAndIsDeletedFalse(doctor.getEmail())) {
+            throw new IllegalArgumentException("Email already exists. Please use a different email.");
+        }
+        
+        // Check if license number already exists (excluding deleted records)
+        if (doctor.getLicenseNumber() != null && 
+            doctorRepository.existsByLicenseNumberAndIsDeletedFalse(doctor.getLicenseNumber())) {
+            throw new IllegalArgumentException("License number already exists. Please use a different license number.");
+        }
+        
         // Generate unique doctor ID if not provided
         if (doctor.getDoctorId() == null || doctor.getDoctorId().isEmpty()) {
             doctor.setDoctorId("DOC" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
@@ -37,11 +48,11 @@ public class DoctorService {
     }
 
     public List<Doctor> getAllDoctors() {
-        return doctorRepository.findAll();
+        return doctorRepository.findByIsDeletedFalse();
     }
 
     public List<Doctor> getDoctorsBySpecialization(String specialization) {
-        return doctorRepository.findBySpecialization(specialization);
+        return doctorRepository.findBySpecializationAndIsDeletedFalse(specialization);
     }
 
     public Doctor updateDoctor(Long id, Doctor doctorDetails) {

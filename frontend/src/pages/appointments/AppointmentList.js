@@ -21,7 +21,7 @@ import {
   Grid,
   MenuItem,
 } from '@mui/material';
-import { Add, Cancel, CheckCircle, Visibility } from '@mui/icons-material';
+import { Add, Cancel, CheckCircle } from '@mui/icons-material';
 import { appointmentAPI, doctorAPI, patientAPI } from '../../services/api';
 
 export default function AppointmentList() {

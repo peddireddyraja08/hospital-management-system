@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Typography,
-  Paper,
   Grid,
   Card,
   CardContent,
@@ -16,20 +15,31 @@ import {
   DialogActions,
   TextField,
   MenuItem,
+  IconButton,
 } from '@mui/material';
-import { Hotel, LocalHospital, Build } from '@mui/icons-material';
+import { Hotel, LocalHospital, Build, Add, Edit, Delete } from '@mui/icons-material';
 import { bedAPI, patientAPI } from '../../services/api';
 
 export default function BedManagement() {
   const [beds, setBeds] = useState([]);
   const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [selectedBed, setSelectedBed] = useState(null);
   const [openAdmitDialog, setOpenAdmitDialog] = useState(false);
   const [openTransferDialog, setOpenTransferDialog] = useState(false);
+  const [openBedDialog, setOpenBedDialog] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState('');
   const [targetBedId, setTargetBedId] = useState('');
+  const [bedFormData, setBedFormData] = useState({
+    bedNumber: '',
+    wardName: '',
+    roomNumber: '',
+    floorNumber: '',
+    bedType: '',
+    dailyCharge: '',
+  });
 
   useEffect(() => {
     loadData();
@@ -37,7 +47,6 @@ export default function BedManagement() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
       const [bedResponse, patientResponse] = await Promise.all([
         bedAPI.getAll(),
         patientAPI.getAll(),
@@ -46,8 +55,6 @@ export default function BedManagement() {
       setPatients(patientResponse.data.data);
     } catch (err) {
       setError('Failed to load data');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -104,6 +111,71 @@ export default function BedManagement() {
     }
   };
 
+  const handleOpenBedDialog = () => {
+    setOpenBedDialog(true);
+    setEditMode(false);
+    setBedFormData({
+      bedNumber: '',
+      wardName: '',
+      roomNumber: '',
+      floorNumber: '',
+      bedType: '',
+      dailyCharge: '',
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  const handleEditBed = (bed) => {
+    setBedFormData({
+      bedNumber: bed.bedNumber,
+      wardName: bed.wardName,
+      roomNumber: bed.roomNumber,
+      floorNumber: bed.floorNumber,
+      bedType: bed.bedType,
+      dailyCharge: bed.dailyCharge,
+    });
+    setSelectedBed(bed);
+    setEditMode(true);
+    setOpenBedDialog(true);
+  };
+
+  const handleDeleteBed = async (bedId) => {
+    if (window.confirm('Are you sure you want to delete this bed?')) {
+      try {
+        await bedAPI.delete(bedId);
+        setSuccess('Bed deleted successfully');
+        loadData();
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to delete bed');
+      }
+    }
+  };
+
+  const handleBedFormChange = (e) => {
+    setBedFormData({
+      ...bedFormData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleBedSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editMode) {
+        await bedAPI.update(selectedBed.id, bedFormData);
+        setSuccess('Bed updated successfully');
+      } else {
+        await bedAPI.create(bedFormData);
+        setSuccess('Bed created successfully');
+      }
+      setOpenBedDialog(false);
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || `Failed to ${editMode ? 'update' : 'create'} bed`);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'AVAILABLE': return 'success';
@@ -137,11 +209,17 @@ export default function BedManagement() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Bed Management (ADT)
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4">
+          Bed Management (ADT)
+        </Typography>
+        <Button variant="contained" startIcon={<Add />} onClick={handleOpenBedDialog}>
+          Add Bed
+        </Button>
+      </Box>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
       {Object.entries(bedsByWard).map(([wardName, wardBeds]) => (
         <Box key={wardName} sx={{ mb: 4 }}>
@@ -190,6 +268,12 @@ export default function BedManagement() {
                         <Button size="small" onClick={() => handleMaintenance(bed.id)}>
                           Maintenance
                         </Button>
+                        <IconButton size="small" color="primary" onClick={() => handleEditBed(bed)}>
+                          <Edit fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" color="error" onClick={() => handleDeleteBed(bed.id)}>
+                          <Delete fontSize="small" />
+                        </IconButton>
                       </>
                     )}
                     {bed.status === 'OCCUPIED' && (
@@ -209,9 +293,17 @@ export default function BedManagement() {
                       </>
                     )}
                     {bed.status === 'UNDER_MAINTENANCE' && (
-                      <Button size="small" color="success" onClick={() => handleMarkAvailable(bed.id)}>
-                        Mark Available
-                      </Button>
+                      <>
+                        <Button size="small" color="success" onClick={() => handleMarkAvailable(bed.id)}>
+                          Mark Available
+                        </Button>
+                        <IconButton size="small" color="primary" onClick={() => handleEditBed(bed)}>
+                          <Edit fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small" color="error" onClick={() => handleDeleteBed(bed.id)}>
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </>
                     )}
                   </CardActions>
                 </Card>
@@ -275,6 +367,91 @@ export default function BedManagement() {
             Transfer
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* Create/Edit Bed Dialog */}
+      <Dialog open={openBedDialog} onClose={() => setOpenBedDialog(false)} maxWidth="sm" fullWidth>
+        <form onSubmit={handleBedSubmit}>
+          <DialogTitle>{editMode ? 'Edit Bed' : 'Add New Bed'}</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Bed Number"
+                  name="bedNumber"
+                  value={bedFormData.bedNumber}
+                  onChange={handleBedFormChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Ward Name"
+                  name="wardName"
+                  value={bedFormData.wardName}
+                  onChange={handleBedFormChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Room Number"
+                  name="roomNumber"
+                  value={bedFormData.roomNumber}
+                  onChange={handleBedFormChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Floor Number"
+                  name="floorNumber"
+                  type="number"
+                  value={bedFormData.floorNumber}
+                  onChange={handleBedFormChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Bed Type"
+                  name="bedType"
+                  value={bedFormData.bedType}
+                  onChange={handleBedFormChange}
+                  required
+                >
+                  <MenuItem value="ICU">ICU</MenuItem>
+                  <MenuItem value="General">General</MenuItem>
+                  <MenuItem value="Private">Private</MenuItem>
+                  <MenuItem value="Semi-Private">Semi-Private</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Daily Charge"
+                  name="dailyCharge"
+                  type="number"
+                  value={bedFormData.dailyCharge}
+                  onChange={handleBedFormChange}
+                  required
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenBedDialog(false)}>Cancel</Button>
+            <Button type="submit" variant="contained">
+              {editMode ? 'Update Bed' : 'Create Bed'}
+            </Button>
+          </DialogActions>
+        </form>
       </Dialog>
     </Box>
   );
