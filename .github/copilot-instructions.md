@@ -155,6 +155,42 @@ Update credentials in `backend/src/main/resources/application.properties`
 - Status flow: PENDING → SCHEDULED → IN_PROGRESS → COMPLETED
 - Can be cancelled or put ON_HOLD at any stage
 
+### Doctor Management
+- `Doctor`: Auto-generated doctorId (DOC + UUID), specialization, licenseNumber (unique), consultationFee
+- Links to User entity via @OneToOne relationship
+- Controllers: `/doctors` with role-based access (ADMIN for create/delete, DOCTOR/RECEPTIONIST for view/update)
+- Key methods: `createDoctor()`, `getDoctorsBySpecialization()`, `updateDoctor()`, soft delete via `deleteDoctor()`
+
+**Pattern**: Follow same BaseEntity pattern with soft delete. Doctor user accounts created separately in User entity.
+
+### Staff Management
+- `Staff`: Auto-generated staffId (STF + UUID), department, designation, joiningDate, salary
+- Links to User entity via @OneToOne relationship
+- Controllers: `/staff` with ADMIN-only access (sensitive HR data)
+- Key methods: `createStaff()`, `getStaffByDepartment()`, `getStaffByDesignation()`, `updateStaff()`
+
+**Pattern**: Staff records separate from User accounts. Department and designation for organizational structure.
+
+### Appointment Management
+- `Appointment`: Links Patient + Doctor with appointmentDate, duration (minutes), status, appointmentType
+- AppointmentStatus: SCHEDULED → COMPLETED / CANCELLED / NO_SHOW
+- AppointmentType: CONSULTATION, FOLLOW_UP, EMERGENCY
+- Conflict detection: `hasConflict()` checks doctor availability before booking/rescheduling
+- Controllers: `/appointments` with role-based access (RECEPTIONIST/DOCTOR for create, PATIENT can view own)
+- Key methods: `createAppointment()` (with conflict check), `cancelAppointment()`, `completeAppointment()`, `getDoctorAppointmentsByDate()`
+
+**Pattern**: Automatic conflict detection prevents double-booking. Check existing appointments in time window (appointmentDate ± duration) for same doctor.
+
+### Bed Management (ADT)
+- `Bed`: Unique bedNumber, wardName, bedType (ICU/General/Private), BedStatus enum, dailyCharge
+- BedStatus: AVAILABLE → OCCUPIED → AVAILABLE (also UNDER_MAINTENANCE, CLEANING, RESERVED)
+- ADT Operations: Admission (`admitPatient()`), Discharge (`dischargePatient()`), Transfer (`transferPatient()`)
+- Links to Patient via currentPatient (ManyToOne, nullable)
+- Controllers: `/beds` with role-based access (NURSE/DOCTOR for ADT operations, ADMIN for create/delete)
+- Key methods: `admitPatient()`, `dischargePatient()`, `transferPatient()`, `getAvailableBeds()`, `getAvailableBedsByWard()`
+
+**Pattern**: ADT operations update BedStatus and currentPatient atomically. Transfer discharges from old bed, admits to new bed. Cannot delete occupied beds.
+
 ### Lab & Diagnostics
 - `LabTest`: Catalog with auto-generated testCode (LAB + UUID), price, normalRange, turnaroundTime
 - `LabTestRequest`: Links Patient + Doctor + LabTest with TestStatus enum
