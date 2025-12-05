@@ -1,5 +1,6 @@
 package com.hospital.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hospital.enums.TestStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,16 +18,19 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 public class LabTestRequest extends BaseEntity {
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patient_id", nullable = false)
+    @JsonIgnoreProperties({"user", "hibernateLazyInitializer", "handler"})
     private Patient patient;
 
-    @ManyToOne
-    @JoinColumn(name = "doctor_id", nullable = false)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "doctor_id")
+    @JsonIgnoreProperties({"user", "hibernateLazyInitializer", "handler"})
     private Doctor doctor;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "lab_test_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private LabTest labTest;
 
     @Column(name = "request_date")

@@ -2,6 +2,7 @@ package com.hospital.entity;
 
 import com.hospital.enums.BloodGroup;
 import com.hospital.enums.Gender;
+import com.hospital.enums.PatientType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +21,10 @@ public class Patient extends BaseEntity {
 
     @Column(name = "patient_id", unique = true, nullable = false)
     private String patientId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "patient_type", nullable = false)
+    private PatientType patientType = PatientType.OUTPATIENT;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;

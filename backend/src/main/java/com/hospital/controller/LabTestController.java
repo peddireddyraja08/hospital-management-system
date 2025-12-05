@@ -59,7 +59,31 @@ public class LabTestController {
     @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE', 'LAB_TECHNICIAN')")
     @Operation(summary = "Get lab tests by category")
     public ResponseEntity<ApiResponse<List<LabTest>>> getLabTestsByCategory(@PathVariable String category) {
-        List<LabTest> labTests = labTestService.getLabTestsByCategory(category);
+        List<LabTest> labTests = labTestService.getLabTestsByCategory(com.hospital.enums.TestCategory.valueOf(category));
+        return ResponseEntity.ok(ApiResponse.success(labTests));
+    }
+
+    @GetMapping("/department/{department}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE', 'LAB_TECHNICIAN')")
+    @Operation(summary = "Get lab tests by department")
+    public ResponseEntity<ApiResponse<List<LabTest>>> getLabTestsByDepartment(@PathVariable String department) {
+        List<LabTest> labTests = labTestService.getLabTestsByDepartment(department);
+        return ResponseEntity.ok(ApiResponse.success(labTests));
+    }
+
+    @GetMapping("/profiles")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE', 'LAB_TECHNICIAN')")
+    @Operation(summary = "Get all test profiles/panels")
+    public ResponseEntity<ApiResponse<List<LabTest>>> getTestProfiles() {
+        List<LabTest> profiles = labTestService.getTestProfiles();
+        return ResponseEntity.ok(ApiResponse.success(profiles));
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE', 'LAB_TECHNICIAN')")
+    @Operation(summary = "Search lab tests by name")
+    public ResponseEntity<ApiResponse<List<LabTest>>> searchLabTestsByName(@RequestParam String testName) {
+        List<LabTest> labTests = labTestService.searchLabTestsByName(testName);
         return ResponseEntity.ok(ApiResponse.success(labTests));
     }
 

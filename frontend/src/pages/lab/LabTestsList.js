@@ -22,9 +22,11 @@ import {
   MenuItem,
   Grid,
   IconButton,
+  alpha,
 } from '@mui/material';
 import { Add, Science, CheckCircle, Visibility } from '@mui/icons-material';
 import { labTestRequestAPI, labTestAPI, patientAPI, doctorAPI } from '../../services/api';
+import PageHeader from '../../components/PageHeader';
 
 export default function LabTestsList() {
   const [requests, setRequests] = useState([]);
@@ -130,12 +132,19 @@ export default function LabTestsList() {
         patientAPI.getAll(),
         doctorAPI.getAll(),
       ]);
-      setRequests(requestsRes.data.data);
-      setLabTests(testsRes.data.data);
-      setPatients(patientsRes.data.data);
-      setDoctors(doctorsRes.data.data);
+      setRequests(requestsRes.data.data || []);
+      setLabTests(testsRes.data.data || []);
+      setPatients(patientsRes.data.data || []);
+      setDoctors(doctorsRes.data.data || []);
+      setError(''); // Clear any previous errors
     } catch (err) {
-      setError('Failed to load data');
+      console.error('Error loading data:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to load data');
+      // Set empty arrays even on error to prevent undefined issues
+      setRequests([]);
+      setLabTests([]);
+      setPatients([]);
+      setDoctors([]);
     } finally {
       setLoading(false);
     }
@@ -216,7 +225,7 @@ export default function LabTestsList() {
     try {
       const requestData = {
         patient: { id: formData.patientId },
-        doctor: { id: formData.doctorId },
+        doctor: formData.doctorId ? { id: formData.doctorId } : null,
         labTest: { id: formData.labTestId },
         priority: formData.priority,
         requestDate: formData.requestDate + 'T00:00:00',
@@ -283,16 +292,57 @@ export default function LabTestsList() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
-          Lab Tests & Requests
-        </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 4 }}>
+        <Box>
+          <Typography 
+            variant="h4" 
+            sx={{ 
+              fontWeight: 700, 
+              color: '#1F2937',
+              fontSize: '1.5rem',
+              mb: 0.5
+            }}
+          >
+            Lab Tests & Requests
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#6B7280', fontSize: '0.875rem' }}>
+            Manage laboratory test orders and requests
+          </Typography>
+        </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button variant="outlined" startIcon={<Add />} onClick={handleOpenTestDialog}>
-            Add Lab Test
+          <Button 
+            variant="outlined" 
+            startIcon={<Add />} 
+            onClick={handleOpenTestDialog}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              borderColor: '#1565C0',
+              color: '#1565C0',
+              '&:hover': {
+                borderColor: '#0D47A1',
+                bgcolor: alpha('#1565C0', 0.04),
+              },
+            }}
+          >
+            ADD LAB TEST
           </Button>
-          <Button variant="contained" startIcon={<Add />} onClick={handleOpenDialog}>
-            New Request
+          <Button 
+            variant="contained" 
+            startIcon={<Add />} 
+            onClick={handleOpenDialog}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              bgcolor: '#1565C0',
+              '&:hover': {
+                bgcolor: '#0D47A1',
+              },
+              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+            }}
+          >
+            NEW REQUEST
           </Button>
         </Box>
       </Box>
@@ -300,12 +350,34 @@ export default function LabTestsList() {
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
-      <Paper sx={{ mb: 2 }}>
-        <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
-          <Tab label="All" />
-          <Tab label="Requested" />
-          <Tab label="In Progress" />
-          <Tab label="Completed" />
+      <Paper 
+        sx={{ 
+          mb: 3,
+          border: '1px solid #E5E7EB',
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        }}
+      >
+        <Tabs 
+          value={tabValue} 
+          onChange={(e, v) => setTabValue(v)}
+          sx={{
+            borderBottom: '1px solid #E5E7EB',
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              fontWeight: 500,
+              fontSize: '0.875rem',
+              color: '#6B7280',
+              '&.Mui-selected': {
+                color: '#1565C0',
+                fontWeight: 600,
+              },
+            },
+          }}
+        >
+          <Tab label="ALL" />
+          <Tab label="REQUESTED" />
+          <Tab label="IN PROGRESS" />
+          <Tab label="COMPLETED" />
         </Tabs>
       </Paper>
 
@@ -426,12 +498,13 @@ export default function LabTestsList() {
                 <TextField
                   fullWidth
                   select
-                  label="Doctor"
+                  label="Doctor (Optional)"
                   name="doctorId"
                   value={formData.doctorId}
                   onChange={handleChange}
-                  required
+                  helperText="Leave empty for walk-in patients without assigned doctor"
                 >
+                  <MenuItem value="">None</MenuItem>
                   {doctors.map((doctor) => (
                     <MenuItem key={doctor.id} value={doctor.id}>
                       Dr. {doctor.firstName} {doctor.lastName}

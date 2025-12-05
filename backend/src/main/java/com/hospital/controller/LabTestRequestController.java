@@ -1,6 +1,7 @@
 package com.hospital.controller;
 
 import com.hospital.dto.ApiResponse;
+import com.hospital.dto.LabTestRequestWithPatientDTO;
 import com.hospital.entity.LabTestRequest;
 import com.hospital.entity.LabTestResult;
 import com.hospital.enums.TestStatus;
@@ -31,6 +32,16 @@ public class LabTestRequestController {
         LabTestRequest createdRequest = labTestRequestService.createLabTestRequest(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Lab test request created successfully", createdRequest));
+    }
+
+    @PostMapping("/with-patient")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'NURSE', 'LAB_TECHNICIAN')")
+    @Operation(summary = "Create lab test request with patient registration (for walk-in patients)")
+    public ResponseEntity<ApiResponse<LabTestRequest>> createLabTestRequestWithPatient(
+            @Valid @RequestBody LabTestRequestWithPatientDTO dto) {
+        LabTestRequest createdRequest = labTestRequestService.createLabTestRequestWithPatient(dto);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Lab test request created with patient registration", createdRequest));
     }
 
     @GetMapping("/{id}")

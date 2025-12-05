@@ -154,9 +154,34 @@ export const labTestAPI = {
   getById: (id) => api.get(`/lab-tests/${id}`),
   getByTestCode: (testCode) => api.get(`/lab-tests/test-code/${testCode}`),
   getByCategory: (category) => api.get(`/lab-tests/category/${category}`),
+  getByDepartment: (department) => api.get(`/lab-tests/department/${department}`),
+  getProfiles: () => api.get('/lab-tests/profiles'),
+  search: (testName) => api.get('/lab-tests/search', { params: { testName } }),
   create: (labTest) => api.post('/lab-tests', labTest),
   update: (id, labTest) => api.put(`/lab-tests/${id}`, labTest),
   delete: (id) => api.delete(`/lab-tests/${id}`),
+};
+
+// Sample API
+export const sampleAPI = {
+  getAll: () => api.get('/samples'),
+  getById: (id) => api.get(`/samples/${id}`),
+  getByAccession: (accessionNumber) => api.get(`/samples/accession/${accessionNumber}`),
+  getByPatient: (patientId) => api.get(`/samples/patient/${patientId}`),
+  getByStatus: (status) => api.get(`/samples/status/${status}`),
+  getByCollectedBy: (collectedBy) => api.get(`/samples/collected-by/${collectedBy}`),
+  getByDateRange: (startDate, endDate) => 
+    api.get('/samples/date-range', { params: { startDate, endDate } }),
+  generateAccessionNumber: () => api.get('/samples/generate-accession-number'),
+  create: (sample) => api.post('/samples', sample),
+  update: (id, sample) => api.put(`/samples/${id}`, sample),
+  updateStatus: (id, statusData) => api.put(`/samples/${id}/status`, statusData),
+  receiveSample: (id, receiveData) => api.put(`/samples/${id}/receive`, receiveData),
+  rejectSample: (id, rejectData) => api.put(`/samples/${id}/reject`, rejectData),
+  startProcessing: (id) => api.put(`/samples/${id}/start-processing`),
+  completeSample: (id, completeData) => api.put(`/samples/${id}/complete`, completeData),
+  delete: (id) => api.delete(`/samples/${id}`),
+  countByStatus: (status) => api.get(`/samples/statistics/count-by-status/${status}`),
 };
 
 // Lab Test Request API
@@ -214,6 +239,51 @@ export const billAPI = {
     api.post(`/bills/${id}/insurance/approve`, null, { params: { approvedAmount } }),
   rejectInsuranceClaim: (id, reason) => 
     api.post(`/bills/${id}/insurance/reject`, null, { params: { reason } }),
+};
+
+// QC Material API
+export const qcMaterialAPI = {
+  getAll: () => api.get('/qc-materials'),
+  getById: (id) => api.get(`/qc-materials/${id}`),
+  getByLabTest: (labTestId) => api.get(`/qc-materials/lab-test/${labTestId}`),
+  getByLevel: (level) => api.get(`/qc-materials/level/${level}`),
+  getExpired: () => api.get('/qc-materials/expired'),
+  getExpiringSoon: (days = 30) => api.get('/qc-materials/expiring-soon', { params: { days } }),
+  create: (material) => api.post('/qc-materials', material),
+  update: (id, material) => api.put(`/qc-materials/${id}`, material),
+  delete: (id) => api.delete(`/qc-materials/${id}`),
+};
+
+// QC Run API
+export const qcRunAPI = {
+  getAll: () => api.get('/qc-runs'),
+  getById: (id) => api.get(`/qc-runs/${id}`),
+  getByMaterial: (materialId) => api.get(`/qc-runs/material/${materialId}`),
+  getByStatus: (status) => api.get(`/qc-runs/status/${status}`),
+  getByDateRange: (startDate, endDate) => 
+    api.get('/qc-runs/date-range', { params: { startDate, endDate } }),
+  getByMaterialAndDateRange: (materialId, startDate, endDate) => 
+    api.get(`/qc-runs/material/${materialId}/date-range`, { params: { startDate, endDate } }),
+  getMaterialStatistics: (materialId, startDate, endDate) =>
+    api.get(`/qc-runs/material/${materialId}/statistics`, { params: { startDate, endDate } }),
+  create: (run) => api.post('/qc-runs', run),
+  update: (id, run) => api.put(`/qc-runs/${id}`, run),
+  delete: (id) => api.delete(`/qc-runs/${id}`),
+};
+
+// Critical Alert API
+export const criticalAlertAPI = {
+  getAll: () => api.get('/critical-alerts'),
+  getById: (id) => api.get(`/critical-alerts/${id}`),
+  getActive: () => api.get('/critical-alerts/active'),
+  getUnacknowledged: () => api.get('/critical-alerts/unacknowledged'),
+  getCount: () => api.get('/critical-alerts/count'),
+  getByPatient: (patientId) => api.get(`/critical-alerts/patient/${patientId}`),
+  getByDoctor: (doctorId) => api.get(`/critical-alerts/doctor/${doctorId}`),
+  acknowledge: (id, data) => api.put(`/critical-alerts/${id}/acknowledge`, data),
+  escalate: (id, data) => api.put(`/critical-alerts/${id}/escalate`, data),
+  resolve: (id, data) => api.put(`/critical-alerts/${id}/resolve`, data),
+  cancel: (id, data) => api.put(`/critical-alerts/${id}/cancel`, data),
 };
 
 export default api;

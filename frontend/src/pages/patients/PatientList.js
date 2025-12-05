@@ -14,12 +14,14 @@ import {
   IconButton,
   TextField,
   InputAdornment,
+  alpha,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
 import { patientAPI } from '../../services/api';
+import PageHeader from '../../components/PageHeader';
 
 export default function PatientList() {
   const [patients, setPatients] = useState([]);
@@ -51,18 +53,22 @@ export default function PatientList() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Patients</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/patients/new')}
-        >
-          Add Patient
-        </Button>
-      </Box>
+      <PageHeader
+        title="Patients"
+        subtitle="Manage patient records and information"
+        action={() => navigate('/patients/new')}
+        actionLabel="ADD PATIENT"
+        actionIcon={<AddIcon />}
+      />
 
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <Paper 
+        sx={{ 
+          p: 2.5, 
+          mb: 3,
+          border: '1px solid #E5E7EB',
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        }}
+      >
         <TextField
           fullWidth
           placeholder="Search patients by name, ID, or email..."
@@ -71,54 +77,87 @@ export default function PatientList() {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon />
+                <SearchIcon sx={{ color: '#6B7280' }} />
               </InputAdornment>
             ),
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: '#F9FAFB',
+              '& fieldset': {
+                borderColor: '#E5E7EB',
+              },
+              '&:hover fieldset': {
+                borderColor: '#1565C0',
+              },
+            },
           }}
         />
       </Paper>
 
-      <TableContainer component={Paper}>
+      <TableContainer 
+        component={Paper}
+        sx={{
+          border: '1px solid #E5E7EB',
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        }}
+      >
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell>Patient ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Phone</TableCell>
-              <TableCell>Blood Group</TableCell>
-              <TableCell>Actions</TableCell>
+            <TableRow sx={{ bgcolor: '#F9FAFB' }}>
+              <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Patient ID</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Email</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Phone</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Blood Group</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: '#374151', fontSize: '0.875rem' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">Loading...</TableCell>
+                <TableCell colSpan={6} align="center" sx={{ py: 6, color: '#6B7280' }}>Loading...</TableCell>
               </TableRow>
             ) : filteredPatients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">No patients found</TableCell>
+                <TableCell colSpan={6} align="center" sx={{ py: 6, color: '#6B7280' }}>No patients found</TableCell>
               </TableRow>
             ) : (
               filteredPatients.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell>{patient.patientId}</TableCell>
-                  <TableCell>{`${patient.firstName} ${patient.lastName}`}</TableCell>
-                  <TableCell>{patient.email}</TableCell>
-                  <TableCell>{patient.phoneNumber}</TableCell>
-                  <TableCell>{patient.bloodGroup}</TableCell>
+                <TableRow 
+                  key={patient.id}
+                  sx={{
+                    '&:hover': {
+                      bgcolor: alpha('#1565C0', 0.04),
+                    },
+                  }}
+                >
+                  <TableCell sx={{ fontSize: '0.875rem', color: '#1F2937' }}>{patient.patientId}</TableCell>
+                  <TableCell sx={{ fontSize: '0.875rem', color: '#1F2937', fontWeight: 500 }}>{`${patient.firstName} ${patient.lastName}`}</TableCell>
+                  <TableCell sx={{ fontSize: '0.875rem', color: '#6B7280' }}>{patient.email}</TableCell>
+                  <TableCell sx={{ fontSize: '0.875rem', color: '#6B7280' }}>{patient.phoneNumber}</TableCell>
+                  <TableCell sx={{ fontSize: '0.875rem', color: '#6B7280' }}>{patient.bloodGroup}</TableCell>
                   <TableCell>
                     <IconButton
-                      color="primary"
+                      size="small"
+                      sx={{
+                        color: '#1565C0',
+                        '&:hover': { bgcolor: alpha('#1565C0', 0.08) }
+                      }}
                       onClick={() => navigate(`/patients/${patient.id}`)}
                     >
-                      <VisibilityIcon />
+                      <VisibilityIcon fontSize="small" />
                     </IconButton>
                     <IconButton
-                      color="secondary"
+                      size="small"
+                      sx={{
+                        color: '#FB8C00',
+                        ml: 0.5,
+                        '&:hover': { bgcolor: alpha('#FB8C00', 0.08) }
+                      }}
                       onClick={() => navigate(`/patients/${patient.id}/edit`)}
                     >
-                      <EditIcon />
+                      <EditIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
                 </TableRow>
