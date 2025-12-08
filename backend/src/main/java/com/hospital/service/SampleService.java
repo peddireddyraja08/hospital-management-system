@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +25,7 @@ public class SampleService {
     private final SampleRepository sampleRepository;
     private final PatientRepository patientRepository;
     private final LabTestRequestRepository labTestRequestRepository;
+    private final IdGeneratorService idGeneratorService;
 
     /**
      * Convert Sample entity to SampleDTO to avoid serialization issues
@@ -73,21 +72,11 @@ public class SampleService {
     }
 
     /**
-     * Generate unique lab accession number in format: YYYYMMDD-XXXX
-     * Example: 20251203-0001
+     * Generate unique lab accession number in format: SAMP-YYYYMMDD-XXXX
+     * Example: SAMP-20250207-0001
      */
     public String generateAccessionNumber() {
-        String datePrefix = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String randomSuffix = String.format("%04d", new Random().nextInt(10000));
-        String accessionNumber = datePrefix + "-" + randomSuffix;
-        
-        // Ensure uniqueness
-        while (sampleRepository.findByAccessionNumber(accessionNumber).isPresent()) {
-            randomSuffix = String.format("%04d", new Random().nextInt(10000));
-            accessionNumber = datePrefix + "-" + randomSuffix;
-        }
-        
-        return accessionNumber;
+        return idGeneratorService.generateId("SAMP");
     }
 
     public SampleDTO createSample(Sample sample) {

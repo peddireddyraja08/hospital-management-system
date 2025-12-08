@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,11 +17,12 @@ import java.util.UUID;
 public class BillService {
 
     private final BillRepository billRepository;
+    private final IdGeneratorService idGeneratorService;
 
     public Bill createBill(Bill bill) {
         // Generate unique bill number if not provided
         if (bill.getBillNumber() == null || bill.getBillNumber().isEmpty()) {
-            bill.setBillNumber("BILL" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            bill.setBillNumber(idGeneratorService.generateId("BILL"));
         }
         
         bill.setBillDate(LocalDateTime.now());

@@ -245,7 +245,7 @@ export default function QCMaterialsList() {
                   <TableCell>{material.manufacturer}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {material.expiryDate ? new Date(material.expiryDate).toLocaleDateString() : 'N/A'}
+                      {material.expiryDate ? new Date(material.expiryDate).toLocaleDateString('en-GB') : 'N/A'}
                       {isExpired(material.expiryDate) && (
                         <Tooltip title="Expired">
                           <Warning color="error" fontSize="small" />

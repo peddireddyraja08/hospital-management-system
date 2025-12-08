@@ -22,7 +22,17 @@ import PharmacyDashboard from './pages/pharmacy/PharmacyDashboard';
 import BillingDashboard from './pages/billing/BillingDashboard';
 import Payments from './pages/billing/Payments';
 import BedManagement from './pages/beds/BedManagement';
+import WardManagement from './pages/beds/WardManagement';
+import BedCreation from './pages/beds/BedCreation';
+import FloorManagement from './pages/beds/FloorManagement';
+import HospitalOperationsDashboard from './pages/beds/HospitalOperationsDashboard';
 import StaffManagement from './pages/staff/StaffManagement';
+import IPDDashboard from './pages/ipd/IPDDashboard';
+import BedMapView from './pages/ipd/BedMapView';
+import PatientTimelineView from './pages/ipd/PatientTimelineView';
+import NursingTaskBoard from './pages/ipd/NursingTaskBoard';
+import DischargeWizard from './pages/ipd/DischargeWizard';
+import IPDAnalytics from './pages/ipd/IPDAnalytics';
 import SystemSettings from './pages/settings/SystemSettings';
 import UserRoles from './pages/settings/UserRoles';
 import UserProfile from './pages/profile/UserProfile';
@@ -58,7 +68,27 @@ function App() {
             <Route path="doctors/edit/:id" element={<DoctorForm />} />
             <Route path="staff" element={<StaffManagement />} />
             <Route path="appointments" element={<AppointmentList />} />
+            
+            {/* IPD - Operations */}
+            <Route path="hospital-operations" element={<HospitalOperationsDashboard />} />
+            <Route path="ipd" element={<IPDDashboard />} />
+            <Route path="bed-map" element={<BedMapView />} />
+            
+            {/* IPD - Clinical */}
+            <Route path="patient-timeline" element={<PatientTimelineView />} />
+            <Route path="task-board" element={<NursingTaskBoard />} />
+            
+            {/* IPD - Bed & Facility */}
+            <Route path="floors" element={<FloorManagement />} />
+            <Route path="wards" element={<WardManagement />} />
             <Route path="beds" element={<BedManagement />} />
+            <Route path="beds/create" element={<BedCreation />} />
+            
+            {/* IPD - Analytics */}
+            <Route path="ipd-analytics" element={<IPDAnalytics />} />
+            
+            {/* IPD - Discharge */}
+            <Route path="discharge-wizard" element={<DischargeWizard />} />
             <Route path="medical-records" element={<MedicalRecordsList />} />
             <Route path="lab-tests" element={<LabTestsList />} />
             <Route path="lab-catalog" element={<LabTestCatalog />} />

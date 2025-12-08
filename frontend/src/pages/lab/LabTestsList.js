@@ -126,17 +126,49 @@ export default function LabTestsList() {
   const loadData = async () => {
     try {
       setLoading(true);
+      console.log('Loading lab test data...');
+      
       const [requestsRes, testsRes, patientsRes, doctorsRes] = await Promise.all([
-        labTestRequestAPI.getAll(),
-        labTestAPI.getAll(),
-        patientAPI.getAll(),
-        doctorAPI.getAll(),
+        labTestRequestAPI.getAll().catch(err => {
+          console.error('Failed to load requests:', err);
+          return { data: { data: [] } };
+        }),
+        labTestAPI.getAll().catch(err => {
+          console.error('Failed to load lab tests:', err);
+          return { data: { data: [] } };
+        }),
+        patientAPI.getAll().catch(err => {
+          console.error('Failed to load patients:', err);
+          return { data: { data: [] } };
+        }),
+        doctorAPI.getAll().catch(err => {
+          console.error('Failed to load doctors:', err);
+          return { data: { data: [] } };
+        }),
       ]);
-      setRequests(requestsRes.data.data || []);
-      setLabTests(testsRes.data.data || []);
-      setPatients(patientsRes.data.data || []);
-      setDoctors(doctorsRes.data.data || []);
+      
+      const requestsData = requestsRes.data.data || [];
+      const testsData = testsRes.data.data || [];
+      const patientsData = patientsRes.data.data || [];
+      const doctorsData = doctorsRes.data.data || [];
+      
+      console.log('Loaded data:', {
+        requests: requestsData.length,
+        tests: testsData.length,
+        patients: patientsData.length,
+        doctors: doctorsData.length
+      });
+      
+      setRequests(requestsData);
+      setLabTests(testsData);
+      setPatients(patientsData);
+      setDoctors(doctorsData);
       setError(''); // Clear any previous errors
+      
+      // Show warning if no data
+      if (patientsData.length === 0) {
+        console.warn('No patients loaded! Check API endpoint and authentication.');
+      }
     } catch (err) {
       console.error('Error loading data:', err);
       setError(err.response?.data?.message || err.message || 'Failed to load data');
@@ -391,17 +423,16 @@ export default function LabTestsList() {
               <TableCell>Request Date</TableCell>
               <TableCell>Priority</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} align="center">Loading...</TableCell>
+                <TableCell colSpan={6} align="center">Loading...</TableCell>
               </TableRow>
             ) : filterRequests().length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} align="center">No test requests found</TableCell>
+                <TableCell colSpan={6} align="center">No test requests found</TableCell>
               </TableRow>
             ) : (
               filterRequests().map((request) => (
@@ -421,48 +452,6 @@ export default function LabTestsList() {
                   </TableCell>
                   <TableCell>
                     <Chip label={request.status} color={getStatusColor(request.status)} size="small" />
-                  </TableCell>
-                  <TableCell>
-                    {request.status === 'REQUESTED' && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleUpdateStatus(request.id, 'SAMPLE_COLLECTED')}
-                        sx={{ mr: 1 }}
-                      >
-                        Collect Sample
-                      </Button>
-                    )}
-                    {request.status === 'SAMPLE_COLLECTED' && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleUpdateStatus(request.id, 'IN_PROGRESS')}
-                        sx={{ mr: 1 }}
-                      >
-                        Start Test
-                      </Button>
-                    )}
-                    {request.status === 'IN_PROGRESS' && (
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => handleOpenResultDialog(request)}
-                        title="Add Result"
-                      >
-                        <Science />
-                      </IconButton>
-                    )}
-                    {request.status === 'COMPLETED' && (
-                      <IconButton
-                        size="small"
-                        color="success"
-                        onClick={() => handleVerify(request.id)}
-                        title="Verify Result"
-                      >
-                        <CheckCircle />
-                      </IconButton>
-                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -486,12 +475,20 @@ export default function LabTestsList() {
                   value={formData.patientId}
                   onChange={handleChange}
                   required
+                  helperText={patients.length === 0 ? "No patients available. Please create a patient first." : ""}
+                  error={patients.length === 0}
                 >
-                  {patients.map((patient) => (
-                    <MenuItem key={patient.id} value={patient.id}>
-                      {patient.firstName} {patient.lastName} ({patient.patientId})
+                  {patients.length === 0 ? (
+                    <MenuItem value="" disabled>
+                      No patients available
                     </MenuItem>
-                  ))}
+                  ) : (
+                    patients.map((patient) => (
+                      <MenuItem key={patient.id} value={patient.id}>
+                        {patient.firstName} {patient.lastName} ({patient.patientId})
+                      </MenuItem>
+                    ))
+                  )}
                 </TextField>
               </Grid>
               <Grid item xs={12}>
@@ -521,12 +518,20 @@ export default function LabTestsList() {
                   value={formData.labTestId}
                   onChange={handleChange}
                   required
+                  helperText={labTests.length === 0 ? "No lab tests available. Please add lab tests first." : ""}
+                  error={labTests.length === 0}
                 >
-                  {labTests.map((test) => (
-                    <MenuItem key={test.id} value={test.id}>
-                      {test.testName} (₹{test.price})
+                  {labTests.length === 0 ? (
+                    <MenuItem value="" disabled>
+                      No lab tests available
                     </MenuItem>
-                  ))}
+                  ) : (
+                    labTests.map((test) => (
+                      <MenuItem key={test.id} value={test.id}>
+                        {test.testName} (${test.price})
+                      </MenuItem>
+                    ))
+                  )}
                 </TextField>
               </Grid>
               <Grid item xs={12} sm={6}>

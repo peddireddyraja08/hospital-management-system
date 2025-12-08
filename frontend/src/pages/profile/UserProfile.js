@@ -45,7 +45,6 @@ export default function UserProfile() {
 
   const handleSave = () => {
     // TODO: Implement API call to update profile
-    console.log('Saving profile:', formData);
     setEditMode(false);
   };
 
@@ -271,7 +270,6 @@ export default function UserProfile() {
                 sx={{ bgcolor: '#1565C0' }}
                 onClick={() => {
                   // TODO: Implement password change API call
-                  console.log('Changing password');
                 }}
               >
                 Update Password

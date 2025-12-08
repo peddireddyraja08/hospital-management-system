@@ -28,6 +28,11 @@ public class AuthService {
     private final CustomUserDetailsService userDetailsService;
 
     public AuthResponse login(LoginRequest request) {
+        System.out.println("========== LOGIN ATTEMPT ==========");
+        System.out.println("Username: " + request.getUsername());
+        System.out.println("Password: " + request.getPassword());
+        System.out.println("===================================");
+        
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );

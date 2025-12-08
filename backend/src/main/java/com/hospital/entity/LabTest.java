@@ -83,4 +83,10 @@ public class LabTest extends BaseEntity {
 
     @Column(name = "requires_fasting")
     private Boolean requiresFasting = false;
+
+    @Column(name = "sample_required")
+    private Boolean sampleRequired = true; // Whether physical sample is required
+
+    @Column(name = "result_type")
+    private String resultType; // NUMERIC, TEXT, IMAGE, REPORT
 }

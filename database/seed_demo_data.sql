@@ -1,0 +1,766 @@
+-- ============================================================================
+-- Demo Data Seeder Script
+-- Hospital Management System
+-- ============================================================================
+-- Purpose: Generate comprehensive demo data with new ID format
+-- Usage: psql -U postgres -d hospital_management -f database/seed_demo_data.sql
+-- Prerequisite: Run clear_all_data.sql first (optional but recommended)
+-- ============================================================================
+
+BEGIN;
+
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+
+-- ============================================================================
+-- Phase 1: Initialize ID Counters for Current Date
+-- ============================================================================
+
+-- Date: 2025-02-07 (YYYYMMDD: 20250207)
+INSERT INTO id_counter (module_prefix, date_key, last_sequence, created_at, updated_at)
+VALUES 
+    ('PAT', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('OUT', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('IN', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('DOC', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('STF', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('LAB', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('MED', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('BILL', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('ADM', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('APT', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('SAMP', '20250207', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT (module_prefix, date_key) DO NOTHING;
+
+-- ============================================================================
+-- Phase 2: Create Users (for Doctor and Patients)
+-- ============================================================================
+
+-- User for Doctor (Dr. Sarah Williams)
+INSERT INTO users (username, email, password, first_name, last_name, phone_number, is_verified, is_active, is_deleted, created_at, updated_at, created_by, updated_by)
+VALUES (
+    'dr.sarah',
+    'dr.sarah@hospital.com',
+    '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', -- password: password123
+    'Sarah',
+    'Williams',
+    '+1-555-0101',
+    true,
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- User for Outpatient (John Doe)
+INSERT INTO users (username, email, password, first_name, last_name, phone_number, is_verified, is_active, is_deleted, created_at, updated_at, created_by, updated_by)
+VALUES (
+    'john.doe',
+    'john.doe@hospital.com',
+    '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', -- password: password123
+    'John',
+    'Doe',
+    '+1-555-0201',
+    true,
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- User for Inpatient (Jane Smith)
+INSERT INTO users (username, email, password, first_name, last_name, phone_number, is_verified, is_active, is_deleted, created_at, updated_at, created_by, updated_by)
+VALUES (
+    'jane.smith',
+    'jane.smith@hospital.com',
+    '$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG', -- password: password123
+    'Jane',
+    'Smith',
+    '+1-555-0202',
+    true,
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- Assign Roles
+INSERT INTO user_roles (user_id, role)
+VALUES 
+    ((SELECT id FROM users WHERE username = 'dr.sarah'), 'DOCTOR'),
+    ((SELECT id FROM users WHERE username = 'john.doe'), 'PATIENT'),
+    ((SELECT id FROM users WHERE username = 'jane.smith'), 'PATIENT');
+
+-- Update ID counter for users (manual increment since created directly)
+UPDATE id_counter SET last_sequence = 1 WHERE module_prefix = 'DOC' AND date_key = '20250207';
+UPDATE id_counter SET last_sequence = 1 WHERE module_prefix = 'OUT' AND date_key = '20250207';
+UPDATE id_counter SET last_sequence = 1 WHERE module_prefix = 'IN' AND date_key = '20250207';
+
+-- ============================================================================
+-- Phase 3: Create Doctor
+-- ============================================================================
+
+INSERT INTO doctors (
+    doctor_id, first_name, last_name, specialization, license_number, 
+    qualification, years_of_experience, consultation_fee, phone_number, email,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by,
+    user_id
+)
+VALUES (
+    'DOC-20250207-0001',
+    'Sarah',
+    'Williams',
+    'General Medicine',
+    'MED2025001',
+    'MBBS, MD (General Medicine)',
+    10,
+    500.00,
+    '+1-555-0101',
+    'dr.sarah@hospital.com',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM',
+    (SELECT id FROM users WHERE username = 'dr.sarah')
+);
+
+-- ============================================================================
+-- Phase 4: Create Patients
+-- ============================================================================
+
+-- Outpatient (John Doe)
+INSERT INTO patients (
+    patient_id, patient_type, first_name, last_name, date_of_birth, 
+    gender, blood_group, phone_number, email, address,
+    emergency_contact_name, emergency_contact_number,
+    allergies, medical_history,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by,
+    user_id
+)
+VALUES (
+    'OUT-20250207-0001',
+    'OUTPATIENT',
+    'John',
+    'Doe',
+    '1985-05-15',
+    'MALE',
+    'A_POSITIVE',
+    '+1-555-0201',
+    'john.doe@hospital.com',
+    '123 Maple Street, Springfield, IL 62701',
+    'Mary Doe (Wife)',
+    '+1-555-0203',
+    'None known',
+    'No significant medical history',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM',
+    (SELECT id FROM users WHERE username = 'john.doe')
+);
+
+-- Inpatient (Jane Smith) - Will be set to INPATIENT type when admitted
+INSERT INTO patients (
+    patient_id, patient_type, first_name, last_name, date_of_birth, 
+    gender, blood_group, phone_number, email, address,
+    emergency_contact_name, emergency_contact_number,
+    allergies, medical_history,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by,
+    user_id
+)
+VALUES (
+    'IN-20250207-0001',
+    'OUTPATIENT', -- Will be changed to INPATIENT during admission
+    'Jane',
+    'Smith',
+    '1990-08-20',
+    'FEMALE',
+    'B_POSITIVE',
+    '+1-555-0202',
+    'jane.smith@hospital.com',
+    '456 Oak Avenue, Springfield, IL 62701',
+    'Robert Smith (Husband)',
+    '+1-555-0204',
+    'Penicillin allergy',
+    'Hypertension (controlled with medication)',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM',
+    (SELECT id FROM users WHERE username = 'jane.smith')
+);
+
+-- ============================================================================
+-- Phase 5: Create Lab Tests Catalog
+-- ============================================================================
+
+INSERT INTO lab_tests (
+    test_code, test_name, description, price, normal_range, unit, 
+    category, sample_type, sample_volume, sample_container,
+    turnaround_time, requires_fasting, department, method,
+    is_active, is_deleted, is_profile, created_at, updated_at, created_by, updated_by
+)
+VALUES 
+    ('LAB-20250207-0001', 'Complete Blood Count', 'Full blood count with differential', 500.00, '12-16 g/dL', 'g/dL', 
+     'HEMATOLOGY', 'BLOOD', '5 ml', 'EDTA tube', '24 hours', false, 'Hematology', 'Automated', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('LAB-20250207-0002', 'Liver Function Test', 'Complete liver panel', 800.00, 'See report', 'Various', 
+     'BIOCHEMISTRY', 'SERUM', '3 ml', 'Plain tube', '24 hours', true, 'Biochemistry', 'Automated', true, false, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('LAB-20250207-0003', 'Kidney Function Test', 'Renal function panel', 700.00, 'See report', 'Various', 
+     'BIOCHEMISTRY', 'SERUM', '3 ml', 'Plain tube', '24 hours', false, 'Biochemistry', 'Automated', true, false, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('LAB-20250207-0004', 'Blood Sugar Fasting', 'Fasting blood glucose', 150.00, '70-100 mg/dL', 'mg/dL', 
+     'BIOCHEMISTRY', 'BLOOD', '2 ml', 'Fluoride tube', '4 hours', true, 'Biochemistry', 'Enzymatic', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('LAB-20250207-0005', 'Thyroid Profile', 'T3, T4, TSH', 900.00, 'See report', 'Various', 
+     'ENDOCRINOLOGY', 'SERUM', '3 ml', 'Plain tube', '48 hours', false, 'Biochemistry', 'CLIA', true, false, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('LAB-20250207-0006', 'Lipid Profile', 'Complete cholesterol panel', 600.00, 'See report', 'mg/dL', 
+     'BIOCHEMISTRY', 'SERUM', '3 ml', 'Plain tube', '24 hours', true, 'Biochemistry', 'Enzymatic', true, false, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('LAB-20250207-0007', 'Urine Routine', 'Complete urine analysis', 200.00, 'Normal', 'Various', 
+     'CLINICAL_PATHOLOGY', 'URINE', '10 ml', 'Sterile container', '6 hours', false, 'Clinical Pathology', 'Microscopy', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('LAB-20250207-0008', 'HbA1c', 'Glycated hemoglobin', 400.00, '4-6%', '%', 
+     'BIOCHEMISTRY', 'BLOOD', '2 ml', 'EDTA tube', '24 hours', false, 'Biochemistry', 'HPLC', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('LAB-20250207-0009', 'ESR', 'Erythrocyte Sedimentation Rate', 100.00, '0-20 mm/hr', 'mm/hr', 
+     'HEMATOLOGY', 'BLOOD', '2 ml', 'EDTA tube', '2 hours', false, 'Hematology', 'Westergren', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('LAB-20250207-0010', 'X-Ray Chest', 'Chest X-ray PA view', 300.00, 'Normal', 'N/A', 
+     'RADIOLOGY', NULL, NULL, NULL, '2 hours', false, 'Radiology', 'Digital', true, false, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM');
+
+-- Update counter
+UPDATE id_counter SET last_sequence = 10 WHERE module_prefix = 'LAB' AND date_key = '20250207';
+
+-- ============================================================================
+-- Phase 6: Create Medications Catalog
+-- ============================================================================
+
+INSERT INTO medications (
+    medication_code, medication_name, generic_name, category, 
+    dosage_form, strength, unit, manufacturer, 
+    unit_price, stock_quantity, reorder_level,
+    requires_prescription, storage_conditions,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES 
+    ('MED-20250207-0001', 'Paracetamol', 'Acetaminophen', 'ANALGESICS', 
+     'Tablet', '500', 'mg', 'PharmaCorp Ltd.', 
+     5.00, 1000, 100, false, 'Store at room temperature', 
+     true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('MED-20250207-0002', 'Amoxicillin', 'Amoxicillin', 'ANTIBIOTICS', 
+     'Capsule', '500', 'mg', 'MediGen Inc.', 
+     15.00, 500, 50, true, 'Store in cool, dry place', 
+     true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('MED-20250207-0003', 'Omeprazole', 'Omeprazole', 'ANTACIDS', 
+     'Capsule', '20', 'mg', 'GastroMed Corp.', 
+     10.00, 800, 80, true, 'Store at room temperature', 
+     true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('MED-20250207-0004', 'Metformin', 'Metformin HCl', 'ANTIDIABETICS', 
+     'Tablet', '500', 'mg', 'DiabeCare Ltd.', 
+     8.00, 600, 60, true, 'Store in cool, dry place', 
+     true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('MED-20250207-0005', 'Aspirin', 'Acetylsalicylic Acid', 'ANTIPLATELET', 
+     'Tablet', '75', 'mg', 'CardioPharma Inc.', 
+     3.00, 1500, 150, false, 'Store at room temperature', 
+     true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM');
+
+-- Update counter
+UPDATE id_counter SET last_sequence = 5 WHERE module_prefix = 'MED' AND date_key = '20250207';
+
+-- ============================================================================
+-- Phase 7: Create Beds
+-- ============================================================================
+
+INSERT INTO beds (
+    bed_number, ward_name, floor_number, room_number, bed_type, status, daily_charge,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES 
+    ('101', 'General Ward', 1, '101', 'GENERAL', 'AVAILABLE', 2000.00,
+     true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('102', 'General Ward', 1, '102', 'GENERAL', 'AVAILABLE', 2000.00,
+     true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+    
+    ('201', 'ICU', 2, '201', 'ICU', 'AVAILABLE', 5000.00,
+     true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM');
+
+-- ============================================================================
+-- Phase 8: Create Appointments
+-- ============================================================================
+
+-- Appointment for Outpatient (John Doe)
+INSERT INTO appointments (
+    patient_id, doctor_id, appointment_date, duration, status, appointment_type,
+    reason, notes, is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    (SELECT id FROM patients WHERE patient_id = 'OUT-20250207-0001'),
+    (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+    '2025-02-07 10:00:00',
+    30,
+    'COMPLETED',
+    'CONSULTATION',
+    'General checkup and fever',
+    'Patient presented with mild fever. Prescribed medication and lab tests.',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- Appointment for Inpatient (Jane Smith - Pre-admission)
+INSERT INTO appointments (
+    patient_id, doctor_id, appointment_date, duration, status, appointment_type,
+    reason, notes, is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    (SELECT id FROM patients WHERE patient_id = 'IN-20250207-0001'),
+    (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+    '2025-02-07 11:00:00',
+    60,
+    'COMPLETED',
+    'CONSULTATION',
+    'Abdominal pain and elevated liver enzymes',
+    'Patient requires admission for further investigation and treatment.',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- Update counter
+UPDATE id_counter SET last_sequence = 2 WHERE module_prefix = 'APT' AND date_key = '20250207';
+
+-- ============================================================================
+-- Phase 9: Create Admission (for Inpatient)
+-- ============================================================================
+
+-- First, update patient type to INPATIENT
+UPDATE patients 
+SET patient_type = 'INPATIENT', 
+    updated_at = CURRENT_TIMESTAMP,
+    updated_by = 'SYSTEM'
+WHERE patient_id = 'IN-20250207-0001';
+
+-- Create admission record
+INSERT INTO admissions (
+    admission_number, patient_id, admitting_doctor_id, current_bed_id,
+    ward, room_number, admission_date, expected_discharge_date,
+    admission_type, status, chief_complaint, provisional_diagnosis, medical_history,
+    is_isolation_required, is_icu_admission, is_emergency_admission,
+    estimated_cost, deposit_amount,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    'ADM-20250207-0001',
+    (SELECT id FROM patients WHERE patient_id = 'IN-20250207-0001'),
+    (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+    (SELECT id FROM beds WHERE bed_number = '102' AND ward_name = 'General Ward'),
+    'General Ward',
+    '102',
+    '2025-02-07 12:00:00',
+    '2025-02-10 12:00:00',
+    'PLANNED',
+    'ADMITTED',
+    'Abdominal pain and elevated liver enzymes',
+    'Suspected hepatitis / liver dysfunction',
+    'Hypertension (controlled)',
+    false,
+    false,
+    false,
+    10000.00,
+    5000.00,
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- Update bed status to OCCUPIED
+UPDATE beds 
+SET status = 'OCCUPIED',
+    current_patient_id = (SELECT id FROM patients WHERE patient_id = 'IN-20250207-0001'),
+    updated_at = CURRENT_TIMESTAMP,
+    updated_by = 'SYSTEM'
+WHERE bed_number = '102' AND ward_name = 'General Ward';
+
+-- Update counter
+UPDATE id_counter SET last_sequence = 1 WHERE module_prefix = 'ADM' AND date_key = '20250207';
+
+-- ============================================================================
+-- Phase 10: Create Medical Records
+-- ============================================================================
+
+-- Medical record for Outpatient
+INSERT INTO medical_records (
+    patient_id, doctor_id, visit_date, diagnosis, symptoms, treatment_plan,
+    prescriptions, follow_up_date, notes,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    (SELECT id FROM patients WHERE patient_id = 'OUT-20250207-0001'),
+    (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+    '2025-02-07 10:00:00',
+    'Viral fever',
+    'Fever (101°F), body ache, mild headache',
+    'Rest, hydration, and antipyretics. Follow up if symptoms persist beyond 3 days.',
+    'Paracetamol 500mg - 1 tablet 3 times daily for 3 days',
+    '2025-02-10',
+    'Patient advised to rest and monitor temperature. CBC ordered.',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- Medical record for Inpatient
+INSERT INTO medical_records (
+    patient_id, doctor_id, visit_date, diagnosis, symptoms, treatment_plan,
+    prescriptions, notes,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    (SELECT id FROM patients WHERE patient_id = 'IN-20250207-0001'),
+    (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+    '2025-02-07 11:00:00',
+    'Suspected liver dysfunction - under investigation',
+    'Abdominal pain (RUQ), jaundice, fatigue, loss of appetite',
+    'Hospital admission for investigation. LFT, ultrasound abdomen. Symptomatic treatment.',
+    'Omeprazole 20mg - 1 capsule twice daily. Vitamin B complex.',
+    'Patient admitted for further investigation and management. Avoid hepatotoxic drugs.',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- ============================================================================
+-- Phase 11: Create Vital Signs (for Inpatient)
+-- ============================================================================
+
+INSERT INTO vital_signs (
+    patient_id, temperature, blood_pressure_systolic, blood_pressure_diastolic,
+    heart_rate, respiratory_rate, oxygen_saturation, weight, height, bmi,
+    recorded_at, recorded_by, notes,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    (SELECT id FROM patients WHERE patient_id = 'IN-20250207-0001'),
+    98.6,
+    128,
+    82,
+    78,
+    16,
+    98,
+    65.5,
+    165,
+    24.1,
+    '2025-02-07 12:30:00',
+    'Nurse Johnson',
+    'Vitals stable on admission',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- ============================================================================
+-- Phase 12: Create Lab Test Requests
+-- ============================================================================
+
+-- Lab request for Outpatient (CBC)
+INSERT INTO lab_test_requests (
+    patient_id, doctor_id, lab_test_id, priority, status, 
+    clinical_notes, requested_date,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    (SELECT id FROM patients WHERE patient_id = 'OUT-20250207-0001'),
+    (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+    (SELECT id FROM lab_tests WHERE test_code = 'LAB-20250207-0001'),
+    'ROUTINE',
+    'COMPLETED',
+    'Patient with fever, rule out infection',
+    '2025-02-07 10:30:00',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- Lab request for Inpatient (LFT)
+INSERT INTO lab_test_requests (
+    patient_id, doctor_id, lab_test_id, priority, status, 
+    clinical_notes, requested_date,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    (SELECT id FROM patients WHERE patient_id = 'IN-20250207-0001'),
+    (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+    (SELECT id FROM lab_tests WHERE test_code = 'LAB-20250207-0002'),
+    'URGENT',
+    'SAMPLE_COLLECTED',
+    'Suspected liver dysfunction, elevated enzymes on previous test',
+    '2025-02-07 12:00:00',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- ============================================================================
+-- Phase 13: Create Prescriptions
+-- ============================================================================
+
+-- Prescription for Outpatient
+INSERT INTO prescriptions (
+    patient_id, doctor_id, medication_id, dosage, frequency, duration,
+    quantity, route, instructions, start_date, end_date, status,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    (SELECT id FROM patients WHERE patient_id = 'OUT-20250207-0001'),
+    (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+    (SELECT id FROM medications WHERE medication_code = 'MED-20250207-0001'),
+    '500 mg',
+    'Three times daily',
+    '3 days',
+    9,
+    'Oral',
+    'Take after meals with water',
+    '2025-02-07',
+    '2025-02-10',
+    'DISPENSED',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- Prescriptions for Inpatient (Multiple medications)
+INSERT INTO prescriptions (
+    patient_id, doctor_id, medication_id, dosage, frequency, duration,
+    quantity, route, instructions, start_date, status,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES 
+    (
+        (SELECT id FROM patients WHERE patient_id = 'IN-20250207-0001'),
+        (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+        (SELECT id FROM medications WHERE medication_code = 'MED-20250207-0003'),
+        '20 mg',
+        'Twice daily',
+        '7 days',
+        14,
+        'Oral',
+        'Take before meals',
+        '2025-02-07',
+        'DISPENSED',
+        true,
+        false,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
+        'SYSTEM',
+        'SYSTEM'
+    ),
+    (
+        (SELECT id FROM patients WHERE patient_id = 'IN-20250207-0001'),
+        (SELECT id FROM doctors WHERE doctor_id = 'DOC-20250207-0001'),
+        (SELECT id FROM medications WHERE medication_code = 'MED-20250207-0001'),
+        '500 mg',
+        'As needed for pain',
+        '7 days',
+        21,
+        'Oral',
+        'Maximum 3 tablets per day',
+        '2025-02-07',
+        'DISPENSED',
+        true,
+        false,
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
+        'SYSTEM',
+        'SYSTEM'
+    );
+
+-- Update medication stock
+UPDATE medications 
+SET stock_quantity = stock_quantity - 9
+WHERE medication_code = 'MED-20250207-0001';
+
+UPDATE medications 
+SET stock_quantity = stock_quantity - 14
+WHERE medication_code = 'MED-20250207-0003';
+
+-- ============================================================================
+-- Phase 14: Create Bills
+-- ============================================================================
+
+-- Bill for Outpatient
+INSERT INTO bills (
+    bill_number, patient_id, bill_date, status,
+    consultation_charges, lab_charges, medication_charges, 
+    subtotal, discount_amount, tax_amount, total_amount, paid_amount, due_amount,
+    payment_method,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    'BILL-20250207-0001',
+    (SELECT id FROM patients WHERE patient_id = 'OUT-20250207-0001'),
+    '2025-02-07 11:00:00',
+    'PAID',
+    500.00,   -- Consultation
+    500.00,   -- CBC test
+    45.00,    -- Paracetamol (9 tablets × $5)
+    1045.00,  -- Subtotal
+    45.00,    -- 4.3% discount
+    0.00,     -- No tax
+    1000.00,  -- Total
+    1000.00,  -- Fully paid
+    0.00,     -- No dues
+    'CREDIT_CARD',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- Bill for Inpatient (Partial - ongoing admission)
+INSERT INTO bills (
+    bill_number, patient_id, bill_date, status,
+    consultation_charges, lab_charges, medication_charges, room_charges,
+    subtotal, discount_amount, tax_amount, total_amount, paid_amount, due_amount,
+    payment_method,
+    is_active, is_deleted, created_at, updated_at, created_by, updated_by
+)
+VALUES (
+    'BILL-20250207-0002',
+    (SELECT id FROM patients WHERE patient_id = 'IN-20250207-0001'),
+    '2025-02-07 18:00:00',
+    'PENDING',
+    500.00,   -- Consultation
+    800.00,   -- LFT test
+    150.00,   -- Medications (Omeprazole + Paracetamol)
+    2000.00,  -- Room charges (1 day)
+    3450.00,  -- Subtotal
+    0.00,     -- No discount (insurance case)
+    0.00,     -- No tax
+    3450.00,  -- Total
+    0.00,     -- Not paid yet (insurance pending)
+    3450.00,  -- Full due
+    'INSURANCE',
+    true,
+    false,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP,
+    'SYSTEM',
+    'SYSTEM'
+);
+
+-- Update counter
+UPDATE id_counter SET last_sequence = 2 WHERE module_prefix = 'BILL' AND date_key = '20250207';
+
+COMMIT;
+
+-- ============================================================================
+-- Verification Queries
+-- ============================================================================
+
+SELECT '=== DATA SEEDING COMPLETED ===' as status;
+
+SELECT 'Users' as entity, COUNT(*) as count FROM users
+UNION ALL
+SELECT 'Patients', COUNT(*) FROM patients
+UNION ALL
+SELECT 'Doctors', COUNT(*) FROM doctors
+UNION ALL
+SELECT 'Lab Tests', COUNT(*) FROM lab_tests
+UNION ALL
+SELECT 'Medications', COUNT(*) FROM medications
+UNION ALL
+SELECT 'Beds', COUNT(*) FROM beds
+UNION ALL
+SELECT 'Appointments', COUNT(*) FROM appointments
+UNION ALL
+SELECT 'Admissions', COUNT(*) FROM admissions
+UNION ALL
+SELECT 'Medical Records', COUNT(*) FROM medical_records
+UNION ALL
+SELECT 'Vital Signs', COUNT(*) FROM vital_signs
+UNION ALL
+SELECT 'Lab Test Requests', COUNT(*) FROM lab_test_requests
+UNION ALL
+SELECT 'Prescriptions', COUNT(*) FROM prescriptions
+UNION ALL
+SELECT 'Bills', COUNT(*) FROM bills
+UNION ALL
+SELECT 'ID Counters', COUNT(*) FROM id_counter;
+
+-- Show sample data
+SELECT '=== PATIENTS ===' as section;
+SELECT patient_id, first_name, last_name, patient_type, blood_group FROM patients;
+
+SELECT '=== DOCTOR ===' as section;
+SELECT doctor_id, first_name, last_name, specialization, consultation_fee FROM doctors;
+
+SELECT '=== APPOINTMENTS ===' as section;
+SELECT a.id, p.patient_id, p.first_name, d.doctor_id, d.first_name as doctor_name, a.appointment_date, a.status
+FROM appointments a
+JOIN patients p ON a.patient_id = p.id
+JOIN doctors d ON a.doctor_id = d.id;
+
+SELECT '=== ADMISSION ===' as section;
+SELECT admission_number, p.patient_id, p.first_name, ward, adm.room_number, b.bed_number, status
+FROM admissions adm
+JOIN patients p ON adm.patient_id = p.id
+JOIN beds b ON adm.current_bed_id = b.id;
+
+SELECT '=== BILLS ===' as section;
+SELECT b.bill_number, p.patient_id, p.first_name, b.total_amount, b.paid_amount, b.due_amount, b.status
+FROM bills b
+JOIN patients p ON b.patient_id = p.id;
+
+SELECT '=== ID COUNTERS ===' as section;
+SELECT module_prefix, date_key, last_sequence FROM id_counter ORDER BY module_prefix;
+
+SELECT '=== DEMO DATA READY FOR USE ===' as status;

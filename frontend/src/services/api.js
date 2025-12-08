@@ -138,6 +138,17 @@ export const bedAPI = {
   getByWard: (wardName) => api.get(`/beds/ward/${wardName}`),
   getByType: (bedType) => api.get(`/beds/type/${bedType}`),
   getAvailableByWard: (wardName) => api.get(`/beds/ward/${wardName}/available`),
+  getAvailableInWard: (ward) => api.get(`/beds/available/ward/${ward}`),
+  getAvailableByType: (bedType) => api.get(`/beds/available/type/${bedType}`),
+  getAvailableIsolationBeds: () => api.get('/beds/available/isolation'),
+  getAvailableWithVentilator: () => api.get('/beds/available/ventilator'),
+  getRealtimeBedMap: () => api.get('/beds/analytics/real-time-map'),
+  getOccupancyAnalytics: () => api.get('/beds/analytics/occupancy'),
+  getPredictedDischarges: (daysAhead = 7) => api.get('/beds/predicted-discharge', { params: { daysAhead } }),
+  getOverstayAlerts: () => api.get('/beds/overstay-alerts'),
+  calculateALOS: (ward, startDate, endDate) => api.get('/beds/analytics/alos', { params: { ward, startDate, endDate } }),
+  getICUUtilization: () => api.get('/beds/analytics/icu-utilization'),
+  getBedsRequiringMaintenance: () => api.get('/beds/maintenance/required'),
   create: (bed) => api.post('/beds', bed),
   update: (id, bed) => api.put(`/beds/${id}`, bed),
   delete: (id) => api.delete(`/beds/${id}`),
@@ -146,6 +157,13 @@ export const bedAPI = {
   transferPatient: (fromBedId, toBedId) => api.post('/beds/transfer', null, { params: { fromBedId, toBedId } }),
   markForMaintenance: (bedId) => api.post(`/beds/${bedId}/maintenance`),
   markAsAvailable: (bedId) => api.post(`/beds/${bedId}/available`),
+  blockBed: (bedId, reason, blockedBy, blockedUntil) => 
+    api.post(`/beds/${bedId}/block`, null, { params: { reason, blockedBy, blockedUntil } }),
+  unblockBed: (bedId) => api.post(`/beds/${bedId}/unblock`),
+  markBedCleaned: (bedId, cleanedBy) => api.post(`/beds/${bedId}/mark-cleaned`, null, { params: { cleanedBy } }),
+  scheduleMaintenance: (bedId, notes, nextMaintenanceDate) => 
+    api.post(`/beds/${bedId}/schedule-maintenance`, null, { params: { notes, nextMaintenanceDate } }),
+  completeMaintenance: (bedId) => api.post(`/beds/${bedId}/complete-maintenance`),
 };
 
 // Lab Test API
@@ -284,6 +302,63 @@ export const criticalAlertAPI = {
   escalate: (id, data) => api.put(`/critical-alerts/${id}/escalate`, data),
   resolve: (id, data) => api.put(`/critical-alerts/${id}/resolve`, data),
   cancel: (id, data) => api.put(`/critical-alerts/${id}/cancel`, data),
+};
+
+// IPD/Admission API
+export const admissionAPI = {
+  getAll: () => api.get('/admissions'),
+  getById: (id) => api.get(`/admissions/${id}`),
+  getByPatientId: (patientId) => api.get(`/admissions/patient/${patientId}`),
+  getActive: () => api.get('/admissions/active'),
+  getByAdmissionNumber: (admissionNumber) => api.get(`/admissions/admission-number/${admissionNumber}`),
+  getByDoctorId: (doctorId) => api.get(`/admissions/doctor/${doctorId}`),
+  getByDepartment: (department) => api.get(`/admissions/department/${department}`),
+  getByStatus: (status) => api.get(`/admissions/status/${status}`),
+  admit: (data) => api.post('/admissions', data),
+  update: (id, data) => api.put(`/admissions/${id}`, data),
+  transfer: (id, bedId) => api.put(`/admissions/${id}/transfer/${bedId}`),
+  discharge: (id) => api.put(`/admissions/${id}/discharge`),
+};
+
+// Bed Management API merged - see earlier definition
+
+// Care Pathway API
+export const carePathwayAPI = {
+  getById: (id) => api.get(`/care-pathways/${id}`),
+  getByAdmissionId: (admissionId) => api.get(`/care-pathways/admission/${admissionId}`),
+  create: (data) => api.post('/care-pathways', data),
+  update: (id, data) => api.put(`/care-pathways/${id}`, data),
+  complete: (id) => api.put(`/care-pathways/${id}/complete`),
+};
+
+// Nurse Task API
+export const nurseTaskAPI = {
+  getAll: () => api.get('/nurse-tasks'),
+  getById: (id) => api.get(`/nurse-tasks/${id}`),
+  getByAdmissionId: (admissionId) => api.get(`/nurse-tasks/admission/${admissionId}`),
+  getByAssignedNurse: (nurseId) => api.get(`/nurse-tasks/nurse/${nurseId}`),
+  getByStatus: (status) => api.get(`/nurse-tasks/status/${status}`),
+  getTaskBoard: () => api.get('/nurse-tasks/task-board'),
+  create: (task) => api.post('/nurse-tasks', task),
+  update: (id, task) => api.put(`/nurse-tasks/${id}`, task),
+  start: (id) => api.put(`/nurse-tasks/${id}/start`),
+  complete: (id, completedBy, notes) => api.put(`/nurse-tasks/${id}/complete`, null, { params: { completedBy, notes } }),
+  markMissed: (id, missedBy, reason) => api.put(`/nurse-tasks/${id}/missed`, null, { params: { missedBy, reason } }),
+  markRefused: (id, reason) => api.put(`/nurse-tasks/${id}/refused`, null, { params: { reason } }),
+  defer: (id, newDueDate, reason) => api.put(`/nurse-tasks/${id}/defer`, null, { params: { newDueDate, reason } }),
+  skip: (id, skippedBy, reason) => api.put(`/nurse-tasks/${id}/skip`, null, { params: { skippedBy, reason } }),
+  delete: (id) => api.delete(`/nurse-tasks/${id}`),
+};
+
+// Clinical Score API
+export const clinicalScoreAPI = {
+  getById: (id) => api.get(`/clinical-scores/${id}`),
+  getByAdmissionId: (admissionId) => api.get(`/clinical-scores/admission/${admissionId}`),
+  getLatestByAdmissionId: (admissionId) => api.get(`/clinical-scores/admission/${admissionId}/latest`),
+  calculateNEWS: (admissionId, vitalSignId, recordedBy) => 
+    api.post(`/clinical-scores/calculate/NEWS/${admissionId}`, null, { params: { vitalSignId, recordedBy } }),
+  calculateMEWS: (admissionId, vitalSignId, recordedBy) => 
+    api.post(`/clinical-scores/calculate/MEWS/${admissionId}`, null, { params: { vitalSignId, recordedBy } }),
 };
 
 export default api;

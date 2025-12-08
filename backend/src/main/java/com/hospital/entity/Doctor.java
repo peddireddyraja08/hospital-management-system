@@ -1,5 +1,6 @@
 package com.hospital.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.hospital.enums.Gender;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Doctor extends BaseEntity {
 
     @Column(name = "doctor_id", unique = true, nullable = false)

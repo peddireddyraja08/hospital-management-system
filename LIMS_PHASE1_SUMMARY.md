@@ -48,7 +48,7 @@ December 3, 2025
   - `requiresFasting` (boolean)
 
 **New Sample Entity:**
-- `accessionNumber` (unique barcode ID, format: YYYYMMDD-XXXX)
+- `accessionNumber` (unique barcode ID, format: SAMP-YYYYMMDD-XXXX)
 - Patient and LabTestRequest references
 - `sampleType` (enum)
 - `status` (enum with workflow)
@@ -90,7 +90,7 @@ December 3, 2025
 - Updated `updateLabTest()` to handle all new fields
 
 **New SampleService:**
-- `generateAccessionNumber()` - Auto-generates unique barcode (YYYYMMDD-XXXX)
+- `generateAccessionNumber()` - Auto-generates unique barcode (SAMP-YYYYMMDD-XXXX)
 - CRUD operations for samples
 - Status workflow methods:
   - `receiveSample()` - COLLECTED → RECEIVED
@@ -117,7 +117,7 @@ December 3, 2025
   - `PUT /samples/{id}/complete` - Complete with storage location
   - `PUT /samples/{id}/status` - Update status directly
 - Query endpoints:
-  - `GET /samples/accession/{accessionNumber}` - Barcode lookup
+  - `GET /samples/accession/{accessionNumber}` - Barcode lookup (Format: SAMP-YYYYMMDD-XXXX)
   - `GET /samples/patient/{patientId}`
   - `GET /samples/status/{status}`
   - `GET /samples/collected-by/{collectedBy}`

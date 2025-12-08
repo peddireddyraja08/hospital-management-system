@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -16,11 +15,12 @@ import java.util.UUID;
 public class StaffService {
 
     private final StaffRepository staffRepository;
+    private final IdGeneratorService idGeneratorService;
 
     public Staff createStaff(Staff staff) {
         // Generate unique staff ID if not provided
         if (staff.getStaffId() == null || staff.getStaffId().isEmpty()) {
-            staff.setStaffId("STF" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            staff.setStaffId(idGeneratorService.generateId("STF"));
         }
         staff.setIsActive(true);
         return staffRepository.save(staff);

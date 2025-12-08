@@ -13,4 +13,5 @@ public interface PhysicianOrderRepository extends JpaRepository<PhysicianOrder, 
     List<PhysicianOrder> findByDoctorId(Long doctorId);
     List<PhysicianOrder> findByStatus(OrderStatus status);
     List<PhysicianOrder> findByPatientIdAndStatus(Long patientId, OrderStatus status);
+    List<PhysicianOrder> findByPatientIdAndOrderType(Long patientId, String orderType);
 }

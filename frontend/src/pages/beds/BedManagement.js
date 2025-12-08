@@ -16,8 +16,25 @@ import {
   TextField,
   MenuItem,
   IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  Paper,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
-import { Hotel, LocalHospital, Build, Add, Edit, Delete } from '@mui/icons-material';
+import { 
+  Hotel, 
+  LocalHospital, 
+  Build, 
+  Add, 
+  Edit, 
+  Delete,
+  ViewList,
+  ViewModule,
+  Sort,
+  FilterList,
+} from '@mui/icons-material';
 import { bedAPI, patientAPI } from '../../services/api';
 
 export default function BedManagement() {
@@ -32,6 +49,15 @@ export default function BedManagement() {
   const [editMode, setEditMode] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState('');
   const [targetBedId, setTargetBedId] = useState('');
+  
+  // Sorting and filtering states
+  const [sortBy, setSortBy] = useState('bed'); // 'bed', 'floor', 'ward'
+  const [groupBy, setGroupBy] = useState('ward'); // 'ward', 'floor', 'none'
+  const [filterWard, setFilterWard] = useState('');
+  const [filterFloor, setFilterFloor] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid', 'list'
+  
   const [bedFormData, setBedFormData] = useState({
     bedNumber: '',
     wardName: '',
@@ -195,17 +221,59 @@ export default function BedManagement() {
     }
   };
 
-  const groupByWard = (beds) => {
-    return beds.reduce((acc, bed) => {
-      if (!acc[bed.wardName]) {
-        acc[bed.wardName] = [];
+  // Get unique wards and floors for filters
+  const uniqueWards = [...new Set(beds.map(bed => bed.wardName))].sort();
+  const uniqueFloors = [...new Set(beds.map(bed => bed.floorNumber))].sort((a, b) => a - b);
+
+  // Filter beds
+  const filteredBeds = beds.filter(bed => {
+    if (filterWard && bed.wardName !== filterWard) return false;
+    if (filterFloor && bed.floorNumber !== parseInt(filterFloor)) return false;
+    if (filterStatus && bed.status !== filterStatus) return false;
+    return true;
+  });
+
+  // Sort beds
+  const sortedBeds = [...filteredBeds].sort((a, b) => {
+    if (sortBy === 'bed') {
+      return a.bedNumber.localeCompare(b.bedNumber);
+    } else if (sortBy === 'floor') {
+      if (a.floorNumber !== b.floorNumber) {
+        return a.floorNumber - b.floorNumber;
       }
-      acc[bed.wardName].push(bed);
-      return acc;
-    }, {});
+      return a.bedNumber.localeCompare(b.bedNumber);
+    } else if (sortBy === 'ward') {
+      if (a.wardName !== b.wardName) {
+        return a.wardName.localeCompare(b.wardName);
+      }
+      return a.bedNumber.localeCompare(b.bedNumber);
+    }
+    return 0;
+  });
+
+  // Group beds
+  const groupBeds = (beds) => {
+    if (groupBy === 'none') {
+      return { 'All Beds': beds };
+    } else if (groupBy === 'ward') {
+      return beds.reduce((acc, bed) => {
+        const key = bed.wardName || 'Unknown Ward';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(bed);
+        return acc;
+      }, {});
+    } else if (groupBy === 'floor') {
+      return beds.reduce((acc, bed) => {
+        const key = `Floor ${bed.floorNumber || 'Unknown'}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(bed);
+        return acc;
+      }, {});
+    }
+    return {};
   };
 
-  const bedsByWard = groupByWard(beds);
+  const groupedBeds = groupBeds(sortedBeds);
 
   return (
     <Box>
@@ -213,44 +281,232 @@ export default function BedManagement() {
         <Typography variant="h4">
           Bed Management (ADT)
         </Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={handleOpenBedDialog}>
-          Add Bed
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button 
+            variant="outlined" 
+            onClick={() => window.location.href = '/floors'}
+          >
+            Floor Plan
+          </Button>
+          <Button 
+            variant="outlined" 
+            onClick={() => window.location.href = '/wards'}
+          >
+            Wards
+          </Button>
+          <Button 
+            variant="outlined" 
+            onClick={() => window.location.href = '/beds/create'}
+          >
+            Bulk Create
+          </Button>
+          <Button variant="contained" startIcon={<Add />} onClick={handleOpenBedDialog}>
+            Add Bed
+          </Button>
+        </Box>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
       {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
 
-      {Object.entries(bedsByWard).map(([wardName, wardBeds]) => (
-        <Box key={wardName} sx={{ mb: 4 }}>
-          <Typography variant="h5" sx={{ mb: 2 }}>{wardName}</Typography>
+      {/* Sorting and Filtering Controls */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Sort By</InputLabel>
+              <Select
+                value={sortBy}
+                label="Sort By"
+                onChange={(e) => setSortBy(e.target.value)}
+                startAdornment={<Sort sx={{ mr: 1, color: 'action.active' }} />}
+              >
+                <MenuItem value="bed">Bed Number</MenuItem>
+                <MenuItem value="floor">Floor</MenuItem>
+                <MenuItem value="ward">Ward</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Group By</InputLabel>
+              <Select
+                value={groupBy}
+                label="Group By"
+                onChange={(e) => setGroupBy(e.target.value)}
+              >
+                <MenuItem value="ward">Ward</MenuItem>
+                <MenuItem value="floor">Floor</MenuItem>
+                <MenuItem value="none">None</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Filter Ward</InputLabel>
+              <Select
+                value={filterWard}
+                label="Filter Ward"
+                onChange={(e) => setFilterWard(e.target.value)}
+              >
+                <MenuItem value="">All Wards</MenuItem>
+                {uniqueWards.map(ward => (
+                  <MenuItem key={ward} value={ward}>{ward}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Filter Floor</InputLabel>
+              <Select
+                value={filterFloor}
+                label="Filter Floor"
+                onChange={(e) => setFilterFloor(e.target.value)}
+              >
+                <MenuItem value="">All Floors</MenuItem>
+                {uniqueFloors.map(floor => (
+                  <MenuItem key={floor} value={floor}>Floor {floor}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={2}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Filter Status</InputLabel>
+              <Select
+                value={filterStatus}
+                label="Filter Status"
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <MenuItem value="">All Status</MenuItem>
+                <MenuItem value="AVAILABLE">Available</MenuItem>
+                <MenuItem value="OCCUPIED">Occupied</MenuItem>
+                <MenuItem value="UNDER_MAINTENANCE">Maintenance</MenuItem>
+                <MenuItem value="CLEANING">Cleaning</MenuItem>
+                <MenuItem value="RESERVED">Reserved</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={2}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                size="small"
+              >
+                <ToggleButton value="grid">
+                  <ViewModule />
+                </ToggleButton>
+                <ToggleButton value="list">
+                  <ViewList />
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          </Grid>
+        </Grid>
+
+        <Box sx={{ mt: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Showing {sortedBeds.length} of {beds.length} beds
+          </Typography>
+          {(filterWard || filterFloor || filterStatus) && (
+            <Button 
+              size="small" 
+              onClick={() => {
+                setFilterWard('');
+                setFilterFloor('');
+                setFilterStatus('');
+              }}
+            >
+              Clear Filters
+            </Button>
+          )}
+        </Box>
+      </Paper>
+
+      {/* Beds Display */}
+      {Object.entries(groupedBeds).map(([groupName, groupBeds]) => (
+        <Box key={groupName} sx={{ mb: 4 }}>
+          {groupBy !== 'none' && (
+            <Typography variant="h5" sx={{ mb: 2 }}>
+              {groupName} ({groupBeds.length} beds)
+            </Typography>
+          )}
           <Grid container spacing={2}>
-            {wardBeds.map((bed) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={bed.id}>
+            {groupBeds.map((bed) => (
+              <Grid item xs={12} sm={viewMode === 'list' ? 12 : 6} md={viewMode === 'list' ? 12 : 4} lg={viewMode === 'list' ? 12 : 3} key={bed.id}>
                 <Card>
                   <CardContent>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      {getStatusIcon(bed.status)}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {getStatusIcon(bed.status)}
+                        <Typography variant="h6">{bed.bedNumber}</Typography>
+                      </Box>
                       <Chip
                         label={bed.status}
                         color={getStatusColor(bed.status)}
                         size="small"
                       />
                     </Box>
-                    <Typography variant="h6">{bed.bedNumber}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Type: {bed.bedType}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Room: {bed.roomNumber} | Floor: {bed.floorNumber}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Charge: ₹{bed.dailyCharge}/day
-                    </Typography>
-                    {bed.currentPatient && (
-                      <Typography variant="body2" sx={{ mt: 1, fontWeight: 'bold' }}>
-                        Patient: {bed.currentPatient.firstName} {bed.currentPatient.lastName}
-                      </Typography>
+                    
+                    {viewMode === 'list' ? (
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={3}>
+                          <Typography variant="body2" color="text.secondary">Ward:</Typography>
+                          <Typography variant="body2" fontWeight="medium">{bed.wardName}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={2}>
+                          <Typography variant="body2" color="text.secondary">Floor:</Typography>
+                          <Typography variant="body2" fontWeight="medium">{bed.floorNumber}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={2}>
+                          <Typography variant="body2" color="text.secondary">Room:</Typography>
+                          <Typography variant="body2" fontWeight="medium">{bed.roomNumber}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={2}>
+                          <Typography variant="body2" color="text.secondary">Type:</Typography>
+                          <Typography variant="body2" fontWeight="medium">{bed.bedType}</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={3}>
+                          <Typography variant="body2" color="text.secondary">Charge:</Typography>
+                          <Typography variant="body2" fontWeight="medium">₹{bed.dailyCharge}/day</Typography>
+                        </Grid>
+                        {bed.currentPatient && (
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">Patient:</Typography>
+                            <Typography variant="body2" fontWeight="bold" color="primary">
+                              {bed.currentPatient.firstName} {bed.currentPatient.lastName}
+                            </Typography>
+                          </Grid>
+                        )}
+                      </Grid>
+                    ) : (
+                      <>
+                        <Typography variant="body2" color="text.secondary">
+                          Ward: {bed.wardName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Type: {bed.bedType}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Room: {bed.roomNumber} | Floor: {bed.floorNumber}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Charge: ₹{bed.dailyCharge}/day
+                        </Typography>
+                        {bed.currentPatient && (
+                          <Typography variant="body2" sx={{ mt: 1, fontWeight: 'bold' }} color="primary">
+                            Patient: {bed.currentPatient.firstName} {bed.currentPatient.lastName}
+                          </Typography>
+                        )}
+                      </>
                     )}
                   </CardContent>
                   <CardActions>

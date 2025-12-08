@@ -16,6 +16,7 @@ import java.util.UUID;
 public class DoctorService {
 
     private final DoctorRepository doctorRepository;
+    private final IdGeneratorService idGeneratorService;
 
     public Doctor createDoctor(Doctor doctor) {
         // Check if email already exists (excluding deleted records)
@@ -31,7 +32,7 @@ public class DoctorService {
         
         // Generate unique doctor ID if not provided
         if (doctor.getDoctorId() == null || doctor.getDoctorId().isEmpty()) {
-            doctor.setDoctorId("DOC" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            doctor.setDoctorId(idGeneratorService.generateId("DOC"));
         }
         doctor.setIsActive(true);
         return doctorRepository.save(doctor);

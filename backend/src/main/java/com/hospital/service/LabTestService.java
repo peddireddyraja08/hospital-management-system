@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -17,11 +16,12 @@ import java.util.UUID;
 public class LabTestService {
 
     private final LabTestRepository labTestRepository;
+    private final IdGeneratorService idGeneratorService;
 
     public LabTest createLabTest(LabTest labTest) {
         // Generate unique test code if not provided
         if (labTest.getTestCode() == null || labTest.getTestCode().isEmpty()) {
-            labTest.setTestCode("LAB" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            labTest.setTestCode(idGeneratorService.generateId("LAB"));
         }
         
         // Set default values
@@ -30,6 +30,12 @@ public class LabTestService {
         }
         if (labTest.getRequiresFasting() == null) {
             labTest.setRequiresFasting(false);
+        }
+        if (labTest.getSampleRequired() == null) {
+            labTest.setSampleRequired(true);
+        }
+        if (labTest.getResultType() == null) {
+            labTest.setResultType("NUMERIC");
         }
         
         labTest.setIsActive(true);
@@ -132,6 +138,12 @@ public class LabTestService {
         }
         if (labTestDetails.getRequiresFasting() != null) {
             labTest.setRequiresFasting(labTestDetails.getRequiresFasting());
+        }
+        if (labTestDetails.getSampleRequired() != null) {
+            labTest.setSampleRequired(labTestDetails.getSampleRequired());
+        }
+        if (labTestDetails.getResultType() != null) {
+            labTest.setResultType(labTestDetails.getResultType());
         }
         
         return labTestRepository.save(labTest);

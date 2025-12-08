@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -17,12 +16,13 @@ import java.util.UUID;
 public class PatientService {
 
     private final PatientRepository patientRepository;
+    private final IdGeneratorService idGeneratorService;
 
     public Patient createPatient(Patient patient) {
         // Generate unique patient ID based on patient type
         if (patient.getPatientId() == null || patient.getPatientId().isEmpty()) {
             String prefix = (patient.getPatientType() == PatientType.INPATIENT) ? "IN" : "OUT";
-            patient.setPatientId(prefix + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            patient.setPatientId(idGeneratorService.generateId(prefix));
         }
         
         // Set default patient type if not specified
@@ -33,6 +33,32 @@ public class PatientService {
         // Convert empty email to null to avoid unique constraint violation
         if (patient.getEmail() != null && patient.getEmail().trim().isEmpty()) {
             patient.setEmail(null);
+        }
+        
+        // Handle empty string values for optional fields - convert to null
+        if (patient.getPhoneNumber() != null && patient.getPhoneNumber().trim().isEmpty()) {
+            patient.setPhoneNumber(null);
+        }
+        if (patient.getAddress() != null && patient.getAddress().trim().isEmpty()) {
+            patient.setAddress(null);
+        }
+        if (patient.getEmergencyContactName() != null && patient.getEmergencyContactName().trim().isEmpty()) {
+            patient.setEmergencyContactName(null);
+        }
+        if (patient.getEmergencyContactNumber() != null && patient.getEmergencyContactNumber().trim().isEmpty()) {
+            patient.setEmergencyContactNumber(null);
+        }
+        if (patient.getInsuranceNumber() != null && patient.getInsuranceNumber().trim().isEmpty()) {
+            patient.setInsuranceNumber(null);
+        }
+        if (patient.getInsuranceProvider() != null && patient.getInsuranceProvider().trim().isEmpty()) {
+            patient.setInsuranceProvider(null);
+        }
+        if (patient.getAllergies() != null && patient.getAllergies().trim().isEmpty()) {
+            patient.setAllergies(null);
+        }
+        if (patient.getMedicalHistory() != null && patient.getMedicalHistory().trim().isEmpty()) {
+            patient.setMedicalHistory(null);
         }
         
         patient.setIsActive(true);

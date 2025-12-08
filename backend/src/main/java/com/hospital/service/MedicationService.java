@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -16,11 +15,12 @@ import java.util.UUID;
 public class MedicationService {
 
     private final MedicationRepository medicationRepository;
+    private final IdGeneratorService idGeneratorService;
 
     public Medication createMedication(Medication medication) {
         // Generate unique medication code if not provided
         if (medication.getMedicationCode() == null || medication.getMedicationCode().isEmpty()) {
-            medication.setMedicationCode("MED" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            medication.setMedicationCode(idGeneratorService.generateId("MED"));
         }
         medication.setIsActive(true);
         return medicationRepository.save(medication);

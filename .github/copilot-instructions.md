@@ -58,7 +58,7 @@ Use method-level `@PreAuthorize`:
 ### Transaction Management
 All services are `@Transactional` at class level. Service methods handle:
 1. Business logic and validation
-2. ID generation (e.g., `PAT` + UUID for patient IDs)
+2. ID generation (e.g., `PAT-20250207-0001` for patient IDs via IdGeneratorService)
 3. Entity state management (isActive, isDeleted)
 4. Calling repositories
 
@@ -136,7 +136,7 @@ Update credentials in `backend/src/main/resources/application.properties`
 ## Module-Specific Patterns
 
 ### Patient Management
-- Auto-generated patient ID: `PAT` prefix + 8-char UUID
+- Auto-generated patient ID: Format `PAT-YYYYMMDD-XXXX` (e.g., `PAT-20250207-0001`)
 - Email must be unique
 - Required fields: firstName, lastName, patientId
 
@@ -156,7 +156,7 @@ Update credentials in `backend/src/main/resources/application.properties`
 - Can be cancelled or put ON_HOLD at any stage
 
 ### Doctor Management
-- `Doctor`: Auto-generated doctorId (DOC + UUID), specialization, licenseNumber (unique), consultationFee
+- `Doctor`: Auto-generated doctorId (Format: `DOC-YYYYMMDD-XXXX`), specialization, licenseNumber (unique), consultationFee
 - Links to User entity via @OneToOne relationship
 - Controllers: `/doctors` with role-based access (ADMIN for create/delete, DOCTOR/RECEPTIONIST for view/update)
 - Key methods: `createDoctor()`, `getDoctorsBySpecialization()`, `updateDoctor()`, soft delete via `deleteDoctor()`
@@ -164,7 +164,7 @@ Update credentials in `backend/src/main/resources/application.properties`
 **Pattern**: Follow same BaseEntity pattern with soft delete. Doctor user accounts created separately in User entity.
 
 ### Staff Management
-- `Staff`: Auto-generated staffId (STF + UUID), department, designation, joiningDate, salary
+- `Staff`: Auto-generated staffId (Format: `STF-YYYYMMDD-XXXX`), department, designation, joiningDate, salary
 - Links to User entity via @OneToOne relationship
 - Controllers: `/staff` with ADMIN-only access (sensitive HR data)
 - Key methods: `createStaff()`, `getStaffByDepartment()`, `getStaffByDesignation()`, `updateStaff()`
@@ -192,7 +192,7 @@ Update credentials in `backend/src/main/resources/application.properties`
 **Pattern**: ADT operations update BedStatus and currentPatient atomically. Transfer discharges from old bed, admits to new bed. Cannot delete occupied beds.
 
 ### Lab & Diagnostics
-- `LabTest`: Catalog with auto-generated testCode (LAB + UUID), price, normalRange, turnaroundTime
+- `LabTest`: Catalog with auto-generated testCode (Format: `LAB-YYYYMMDD-XXXX`), price, normalRange, turnaroundTime
 - `LabTestRequest`: Links Patient + Doctor + LabTest with TestStatus enum
 - `LabTestResult`: Stores test values, verification status, and result interpretation
 - TestStatus flow: REQUESTED → SAMPLE_COLLECTED → IN_PROGRESS → COMPLETED → VERIFIED → CANCELLED
@@ -203,7 +203,7 @@ Update credentials in `backend/src/main/resources/application.properties`
 **Pattern**: Lab test requests follow CPOE pattern—create request → collect sample → add result → verify result.
 
 ### Pharmacy & Medication
-- `Medication`: Master catalog with auto-generated medicationCode (MED + UUID), stockQuantity, reorderLevel
+- `Medication`: Master catalog with auto-generated medicationCode (Format: `MED-YYYYMMDD-XXXX`), stockQuantity, reorderLevel
 - `MedicationInventory`: Batch tracking with batchNumber, expiryDate, isExpired flag (not yet in controllers)
 - `Prescription`: Links Patient + Doctor + Medication with PrescriptionStatus enum
 - PrescriptionStatus: PENDING → DISPENSED / PARTIALLY_DISPENSED / CANCELLED / EXPIRED
@@ -214,7 +214,7 @@ Update credentials in `backend/src/main/resources/application.properties`
 **Pattern**: Stock management checks availability before dispensing. `updateStock()` for manual adjustments (positive/negative quantities).
 
 ### Billing & Financial
-- `Bill`: Auto-generated billNumber (BILL + UUID), comprehensive charge tracking
+- `Bill`: Auto-generated billNumber (Format: `BILL-YYYYMMDD-XXXX`), comprehensive charge tracking
 - Charge categories: consultationCharges, labCharges, medicationCharges, roomCharges, procedureCharges, otherCharges
 - Auto-calculates: subtotal, totalAmount, dueAmount in `BillService.calculateBillAmounts()`
 - BillStatus: PENDING → PARTIALLY_PAID → PAID (also INSURANCE_PENDING → INSURANCE_APPROVED/REJECTED)

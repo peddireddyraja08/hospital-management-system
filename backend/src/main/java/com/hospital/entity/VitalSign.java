@@ -50,6 +50,12 @@ public class VitalSign extends BaseEntity {
     @Column(name = "bmi")
     private Double bmi;
 
+    @Column(name = "consciousness_level")
+    private String consciousnessLevel; // ALERT, VOICE, PAIN, UNRESPONSIVE (AVPU)
+
+    @Column(name = "is_on_oxygen")
+    private Boolean isOnOxygen;
+
     @Column(name = "recorded_by")
     private String recordedBy;
 

@@ -36,7 +36,7 @@ All modules have been implemented with full backend services, REST APIs, fronten
 ### 1. **Patient Management** ✅
 **Backend:**
 - `PatientRepository` - Email search, patient ID lookup
-- `PatientService` - Auto-generated PAT+UUID IDs, CRUD with soft delete
+- `PatientService` - Auto-generated IDs (PAT-YYYYMMDD-XXXX), CRUD with soft delete
 - `PatientController` - `/patients` endpoints with role-based access
 
 **Frontend:**
@@ -55,7 +55,7 @@ All modules have been implemented with full backend services, REST APIs, fronten
 ### 2. **Doctor Management** ✅
 **Backend:**
 - `DoctorRepository` - Specialization filter, license number lookup
-- `DoctorService` - Auto-generated DOC+UUID IDs, email search
+- `DoctorService` - Auto-generated IDs (DOC-YYYYMMDD-XXXX), email search
 - `DoctorController` - `/doctors` endpoints (ADMIN, DOCTOR, RECEPTIONIST roles)
 
 **Frontend:**
@@ -73,7 +73,7 @@ All modules have been implemented with full backend services, REST APIs, fronten
 ### 3. **Staff Management** ✅
 **Backend:**
 - `StaffRepository` - Department/designation queries
-- `StaffService` - Auto-generated STF+UUID IDs
+- `StaffService` - Auto-generated IDs (STF-YYYYMMDD-XXXX)
 - `StaffController` - `/staff` endpoints (ADMIN-only access)
 
 **Frontend:**
@@ -177,7 +177,7 @@ All modules have been implemented with full backend services, REST APIs, fronten
 - `LabTestRepository` - Test catalog with categories
 - `LabTestRequestRepository` - Patient/doctor/status queries
 - `LabTestResultRepository` - Result storage
-- `LabTestService` - Auto-generated LAB+UUID test codes
+- `LabTestService` - Auto-generated test codes (LAB-YYYYMMDD-XXXX)
 - `LabTestRequestService` - Request workflow with status transitions
 - Controllers: `LabTestController`, `LabTestRequestController`
 
@@ -198,7 +198,7 @@ All modules have been implemented with full backend services, REST APIs, fronten
 **Backend:**
 - `MedicationRepository` - Stock level queries, low stock alerts
 - `PrescriptionRepository` - Patient/doctor/status queries
-- `MedicationService` - Auto-generated MED+UUID codes, stock management
+- `MedicationService` - Auto-generated codes (MED-YYYYMMDD-XXXX), stock management
 - `PrescriptionService` - **Automatic stock deduction** on dispensing
 - Controllers: `MedicationController`, `PrescriptionController`
 
@@ -227,7 +227,7 @@ All modules have been implemented with full backend services, REST APIs, fronten
 - Add payment UI
 
 **Features:**
-- Auto-generated BILL+UUID bill numbers
+- Auto-generated bill numbers (BILL-YYYYMMDD-XXXX)
 - Comprehensive charge categories:
   - Consultation charges
   - Lab charges
@@ -258,7 +258,7 @@ Controller → Service → Repository → Entity
 - **@Transactional services** - All service methods atomic
 - **ApiResponse wrapper** - Standardized response format
 - **ResourceNotFoundException** - Consistent error handling
-- **Auto-ID generation** - Prefix + UUID for all entities
+- **Auto-ID generation** - Centralized IdGeneratorService with format PREFIX-YYYYMMDD-XXXX
 - **@PreAuthorize** - Method-level role-based security
 
 ### Frontend (React + Material-UI)
@@ -454,7 +454,7 @@ Frontend: http://localhost:3000
 5. **Insurance Claims** - Complete workflow with approval/rejection tracking
 6. **Soft Delete Pattern** - Data integrity with is_deleted flags throughout
 7. **Audit Trails** - Every record tracks who created/updated and when
-8. **Auto-ID Generation** - Unique identifiers (PAT/DOC/STF/LAB/MED/BILL + UUID)
+8. **Auto-ID Generation** - Sequential IDs via IdGeneratorService (PAT/DOC/STF/LAB/MED/BILL-YYYYMMDD-XXXX)
 
 ---
 

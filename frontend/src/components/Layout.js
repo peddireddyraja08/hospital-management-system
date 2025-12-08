@@ -53,6 +53,9 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SearchIcon from '@mui/icons-material/Search';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 import { useAuth } from '../context/AuthContext';
 import { criticalAlertAPI } from '../services/api';
 
@@ -87,7 +90,59 @@ const menuSections = [
     title: 'Inpatient',
     icon: <HotelIcon />,
     items: [
-      { text: 'Bed Management', icon: <HotelIcon />, path: '/beds' },
+      // Operations Submenu
+      { 
+        text: 'Operations', 
+        icon: <AnalyticsIcon />, 
+        isSubmenu: true,
+        items: [
+          { text: 'Operations Dashboard', icon: <AnalyticsIcon />, path: '/hospital-operations' },
+          { text: 'IPD Dashboard', icon: <DashboardIcon />, path: '/ipd' },
+          { text: 'Bed Map', icon: <HotelIcon />, path: '/bed-map' },
+        ]
+      },
+      // Clinical Submenu
+      { 
+        text: 'Clinical', 
+        icon: <MedicalServicesIcon />, 
+        isSubmenu: true,
+        items: [
+          { text: 'Patient Timeline', icon: <TimelineIcon />, path: '/patient-timeline' },
+          { text: 'Nursing Task Board', icon: <CheckBoxIcon />, path: '/task-board' },
+        ]
+      },
+      // Bed & Facility Submenu
+      { 
+        text: 'Bed & Facility', 
+        icon: <HotelIcon />, 
+        isSubmenu: true,
+        items: [
+          { text: 'Floor Management', icon: <DashboardIcon />, path: '/floors' },
+          { text: 'Ward Management', icon: <MedicalServicesIcon />, path: '/wards' },
+          { text: 'Bed Management', icon: <HotelIcon />, path: '/beds' },
+          { text: 'Bed Creation', icon: <PersonAddIcon />, path: '/beds/create' },
+        ]
+      },
+      // Analytics Submenu
+      { 
+        text: 'Analytics', 
+        icon: <AnalyticsIcon />, 
+        isSubmenu: true,
+        items: [
+          { text: 'IPD Analytics', icon: <AnalyticsIcon />, path: '/ipd-analytics' },
+        ]
+      },
+
+
+      // Discharge
+      { 
+        text: 'Discharge', 
+        icon: <HotelIcon />, 
+        isSubmenu: true,
+        items: [
+          { text: 'Discharge Wizard', icon: <HotelIcon />, path: '/discharge-wizard' },
+        ]
+      },
     ],
   },
   {
@@ -155,6 +210,19 @@ export default function Layout() {
       ...prev,
       [sectionTitle]: !prev[sectionTitle]
     }));
+  };
+
+  const handleSubmenuToggle = (submenuKey) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [submenuKey]: !prev[submenuKey]
+    }));
+  };
+
+  // Check if user has required role
+  const hasRole = (requiredRoles) => {
+    if (!requiredRoles || requiredRoles.length === 0) return true;
+    return requiredRoles.includes(user?.role);
   };
 
   const handleProfileMenuOpen = (event) => {
@@ -234,6 +302,99 @@ export default function Layout() {
               <Collapse in={openSections[section.title]} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
                   {section.items.map((item) => {
+                    // Check role-based visibility
+                    if (item.roles && !hasRole(item.roles)) {
+                      return null;
+                    }
+
+                    // Handle submenu items
+                    if (item.isSubmenu) {
+                      const submenuKey = `${section.title}-${item.text}`;
+                      return (
+                        <Box key={item.text}>
+                          <ListItemButton 
+                            onClick={() => handleSubmenuToggle(submenuKey)}
+                            sx={{ 
+                              pl: 5,
+                              py: 0.75,
+                              mx: 1,
+                              my: 0.25,
+                              borderRadius: 1,
+                              transition: 'all 0.2s',
+                              '&:hover': { 
+                                bgcolor: alpha('#1565C0', 0.08),
+                                transform: 'translateX(4px)'
+                              }
+                            }}
+                          >
+                            <ListItemIcon sx={{ 
+                              minWidth: 36, 
+                              color: '#6B7280',
+                              '& svg': { fontSize: 18 }
+                            }}>
+                              {item.icon}
+                            </ListItemIcon>
+                            <ListItemText 
+                              primary={item.text} 
+                              primaryTypographyProps={{ 
+                                fontSize: '0.8125rem',
+                                fontWeight: 500,
+                                color: '#374151'
+                              }}
+                            />
+                            {openSections[submenuKey] ? 
+                              <ExpandLess sx={{ color: '#9CA3AF', fontSize: 18 }} /> : 
+                              <ExpandMore sx={{ color: '#9CA3AF', fontSize: 18 }} />
+                            }
+                          </ListItemButton>
+                          <Collapse in={openSections[submenuKey]} timeout="auto" unmountOnExit>
+                            <List component="div" disablePadding>
+                              {item.items.map((subItem) => {
+                                const isActive = location.pathname === subItem.path;
+                                return (
+                                  <ListItem key={subItem.text} disablePadding>
+                                    <ListItemButton 
+                                      onClick={() => navigate(subItem.path)}
+                                      sx={{ 
+                                        pl: 9,
+                                        py: 0.5,
+                                        mx: 1,
+                                        my: 0.25,
+                                        borderRadius: 1,
+                                        transition: 'all 0.2s',
+                                        bgcolor: isActive ? alpha('#1565C0', 0.12) : 'transparent',
+                                        '&:hover': { 
+                                          bgcolor: isActive ? alpha('#1565C0', 0.18) : alpha('#1565C0', 0.08),
+                                          transform: 'translateX(4px)'
+                                        }
+                                      }}
+                                    >
+                                      <ListItemIcon sx={{ 
+                                        minWidth: 32, 
+                                        color: isActive ? '#1565C0' : '#9CA3AF',
+                                        '& svg': { fontSize: 18 }
+                                      }}>
+                                        {subItem.icon}
+                                      </ListItemIcon>
+                                      <ListItemText 
+                                        primary={subItem.text} 
+                                        primaryTypographyProps={{ 
+                                          fontSize: '0.75rem',
+                                          fontWeight: isActive ? 600 : 400,
+                                          color: isActive ? '#1565C0' : '#6B7280'
+                                        }}
+                                      />
+                                    </ListItemButton>
+                                  </ListItem>
+                                );
+                              })}
+                            </List>
+                          </Collapse>
+                        </Box>
+                      );
+                    }
+
+                    // Handle regular menu items
                     const isActive = location.pathname === item.path;
                     return (
                       <ListItem key={item.text} disablePadding>

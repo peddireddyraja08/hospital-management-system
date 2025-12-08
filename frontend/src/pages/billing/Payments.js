@@ -160,7 +160,7 @@ export default function Payments() {
                     />
                   </TableCell>
                   <TableCell sx={{ fontSize: '0.875rem', color: '#6B7280' }}>
-                    {new Date(payment.paymentDate).toLocaleDateString()}
+                    {new Date(payment.paymentDate).toLocaleDateString('en-GB')}
                   </TableCell>
                   <TableCell>
                     <Chip

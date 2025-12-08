@@ -3,6 +3,20 @@
 -- Create database
 CREATE DATABASE IF NOT EXISTS hospital_management;
 
+-- ID Counter Table (for sequential ID generation)
+CREATE TABLE id_counter (
+    id BIGSERIAL PRIMARY KEY,
+    module_prefix VARCHAR(10) NOT NULL,
+    date_key VARCHAR(8) NOT NULL,
+    last_sequence INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(module_prefix, date_key)
+);
+
+-- Create index for faster lookups
+CREATE INDEX idx_id_counter_module_date ON id_counter(module_prefix, date_key);
+
 -- Users and Authentication
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
@@ -32,6 +46,7 @@ CREATE TABLE user_roles (
 CREATE TABLE patients (
     id BIGSERIAL PRIMARY KEY,
     patient_id VARCHAR(50) UNIQUE NOT NULL,
+    patient_type VARCHAR(20) NOT NULL DEFAULT 'OUTPATIENT',
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE,
@@ -201,9 +216,24 @@ CREATE TABLE lab_tests (
     test_category VARCHAR(100),
     price DECIMAL(10,2),
     normal_range VARCHAR(100),
+    normal_range_male VARCHAR(100),
+    normal_range_female VARCHAR(100),
+    normal_range_child VARCHAR(100),
     unit VARCHAR(50),
+    sample_type VARCHAR(100),
+    sample_volume VARCHAR(50),
+    sample_container VARCHAR(100),
     preparation_instructions TEXT,
     turnaround_time INTEGER,
+    critical_low VARCHAR(50),
+    critical_high VARCHAR(50),
+    is_profile BOOLEAN DEFAULT FALSE,
+    profile_tests TEXT,
+    department VARCHAR(100),
+    method VARCHAR(200),
+    requires_fasting BOOLEAN DEFAULT FALSE,
+    sample_required BOOLEAN DEFAULT TRUE,
+    result_type VARCHAR(50) DEFAULT 'NUMERIC',
     is_active BOOLEAN DEFAULT TRUE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL,

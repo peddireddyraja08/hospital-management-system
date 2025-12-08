@@ -21,6 +21,7 @@ export default function PatientForm() {
     dateOfBirth: '',
     gender: '',
     bloodGroup: '',
+    patientType: 'OUTPATIENT',
     phoneNumber: '',
     email: '',
     address: '',
@@ -52,14 +53,32 @@ export default function PatientForm() {
     setLoading(true);
 
     try {
+      // Clean up the patient data - remove empty strings for optional enum fields
+      const patientData = {
+        ...patient,
+        gender: patient.gender || null,
+        bloodGroup: patient.bloodGroup || null,
+        dateOfBirth: patient.dateOfBirth || null,
+        email: patient.email?.trim() || null,
+        phoneNumber: patient.phoneNumber?.trim() || null,
+        address: patient.address?.trim() || null,
+        emergencyContactName: patient.emergencyContactName?.trim() || null,
+        emergencyContactNumber: patient.emergencyContactNumber?.trim() || null,
+        insuranceNumber: patient.insuranceNumber?.trim() || null,
+        insuranceProvider: patient.insuranceProvider?.trim() || null,
+        allergies: patient.allergies?.trim() || null,
+        medicalHistory: patient.medicalHistory?.trim() || null,
+      };
+
       if (id) {
-        await patientAPI.update(id, patient);
+        await patientAPI.update(id, patientData);
       } else {
-        await patientAPI.create(patient);
+        await patientAPI.create(patientData);
       }
       navigate('/patients');
     } catch (error) {
       console.error('Error saving patient:', error);
+      alert('Error saving patient: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -136,6 +155,21 @@ export default function PatientForm() {
                   'AB_POSITIVE', 'AB_NEGATIVE', 'O_POSITIVE', 'O_NEGATIVE'].map(bg => (
                   <MenuItem key={bg} value={bg}>{bg.replace('_', ' ')}</MenuItem>
                 ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                required
+                select
+                label="Patient Type"
+                name="patientType"
+                value={patient.patientType}
+                onChange={handleChange}
+                helperText="Select INPATIENT for admitted patients. Type will auto-update on admission."
+              >
+                <MenuItem value="OUTPATIENT">Outpatient (OPD) - Walk-in/Consultation</MenuItem>
+                <MenuItem value="INPATIENT">Inpatient (IPD) - Admitted/Hospitalized</MenuItem>
               </TextField>
             </Grid>
             <Grid item xs={12} md={6}>

@@ -79,13 +79,17 @@ spring.datasource.password=your_password_here
 ## Key Features
 
 ### Auto-Generated IDs
-All entities have auto-generated unique identifiers:
-- Patients: `PAT` + 8-char UUID
-- Doctors: `DOC` + 8-char UUID
-- Staff: `STF` + 8-char UUID
-- Lab Tests: `LAB` + 8-char UUID
-- Medications: `MED` + 8-char UUID
-- Bills: `BILL` + 8-char UUID
+All entities have auto-generated sequential unique identifiers:
+- Patients: `PAT-YYYYMMDD-XXXX` (e.g., PAT-20250207-0001)
+- Doctors: `DOC-YYYYMMDD-XXXX` (e.g., DOC-20250207-0001)
+- Staff: `STF-YYYYMMDD-XXXX` (e.g., STF-20250207-0001)
+- Lab Tests: `LAB-YYYYMMDD-XXXX` (e.g., LAB-20250207-0001)
+- Medications: `MED-YYYYMMDD-XXXX` (e.g., MED-20250207-0001)
+- Bills: `BILL-YYYYMMDD-XXXX` (e.g., BILL-20250207-0001)
+- Admissions: `ADM-YYYYMMDD-XXXX` (e.g., ADM-20250207-0001)
+- Samples: `SAMP-YYYYMMDD-XXXX` (e.g., SAMP-20250207-0001)
+
+**ID Generation**: Managed by `IdGeneratorService` with database-backed counters (`id_counter` table). Counters reset daily for each module prefix.
 
 ### Audit Trail
 Every table includes:
@@ -100,19 +104,161 @@ Performance indexes on:
 - Appointment Patient/Doctor relationships
 - Bill numbers and patient relationships
 
-## Sample Data (Optional)
+## Database Seeders
 
-To insert sample data for testing:
+The project includes comprehensive database seeding scripts for development and testing.
+
+### Available Scripts
+
+1. **`clear_all_data.sql`** - Safely clears all data from database
+2. **`seed_demo_data.sql`** - Loads comprehensive demo data with new ID format
+3. **`migration_add_id_counter.sql`** - Migration for existing databases to add ID counter table
+
+### Clear All Data
+
+To remove all data from the database (useful for testing):
+
+```bash
+psql -U postgres -d hospital_management -f database/clear_all_data.sql
+```
+
+**WARNING**: This deletes ALL data. Use only in development/testing environments.
+
+Features:
+- Respects foreign key dependencies (clears in correct order)
+- Resets all PostgreSQL sequences
+- Clears ID counter table
+- Provides verification query output
+
+### Load Demo Data
+
+The `seed_demo_data.sql` script creates realistic demo data including:
+
+```bash
+psql -U postgres -d hospital_management -f database/seed_demo_data.sql
+```
+
+**Demo Data Includes:**
+
+**Users & Access (3 users):**
+- Dr. Sarah Williams (DOCTOR role)
+- John Doe (PATIENT role - Outpatient)
+- Jane Smith (PATIENT role - Inpatient)
+- Default password for all: `password123`
+
+**Core Entities:**
+- 1 Doctor: Dr. Sarah Williams (DOC-20250207-0001) - General Medicine specialist
+- 2 Patients:
+  - John Doe (OUT-20250207-0001) - Outpatient with completed visit
+  - Jane Smith (IN-20250207-0001) - Inpatient currently admitted
+
+**Master Data:**
+- 10 Lab Tests: CBC, LFT, KFT, Blood Sugar, Thyroid Profile, Lipid Profile, Urine Routine, HbA1c, ESR, X-Ray Chest
+- 5 Medications: Paracetamol, Amoxicillin, Omeprazole, Metformin, Aspirin (with stock quantities)
+- 3 Beds: 2 in General Ward, 1 in ICU (1 occupied by Jane Smith)
+
+**Transactions & Relationships:**
+- 2 Appointments (both completed - regular consultation and pre-admission)
+- 1 Active Admission (Jane Smith in General Ward bed 102)
+- 2 Medical Records (with diagnosis, symptoms, treatment plans)
+- 1 Vital Signs record (for admitted patient)
+- 2 Lab Test Requests (CBC completed, LFT in progress)
+- 3 Prescriptions (all dispensed with stock deduction)
+- 2 Bills:
+  - BILL-20250207-0001: $1,000 (PAID via credit card) - Outpatient
+  - BILL-20250207-0002: $3,450 (INSURANCE_PENDING) - Inpatient
+
+**Demo Login Credentials:**
+```
+Doctor:
+  Username: dr.sarah
+  Password: password123
+  Email: dr.sarah@hospital.com
+
+Outpatient:
+  Username: john.doe
+  Password: password123
+  Email: john.doe@hospital.com
+
+Inpatient:
+  Username: jane.smith
+  Password: password123
+  Email: jane.smith@hospital.com
+```
+
+### Typical Workflow
+
+**For new setup:**
+```bash
+# 1. Create database
+createdb hospital_management
+
+# 2. Run schema
+psql -U postgres -d hospital_management -f database/schema.sql
+
+# 3. Load demo data
+psql -U postgres -d hospital_management -f database/seed_demo_data.sql
+```
+
+**For existing database (migration):**
+```bash
+# 1. Apply ID counter migration
+psql -U postgres -d hospital_management -f database/migration_add_id_counter.sql
+
+# 2. (Optional) Clear old data and load new demo data
+psql -U postgres -d hospital_management -f database/clear_all_data.sql
+psql -U postgres -d hospital_management -f database/seed_demo_data.sql
+```
+
+**For testing (reset data):**
+```bash
+# Clear and reload
+psql -U postgres -d hospital_management -f database/clear_all_data.sql
+psql -U postgres -d hospital_management -f database/seed_demo_data.sql
+```
+
+### Verify Demo Data
+
+After loading, verify with:
 
 ```sql
--- Create admin user
-INSERT INTO users (username, email, password, first_name, last_name, is_verified, is_active, created_at)
-VALUES ('admin', 'admin@hospital.com', '$2a$10$...', 'Admin', 'User', true, true, NOW());
+-- Check record counts
+SELECT 
+    'Users' as entity, COUNT(*) as count FROM users
+UNION ALL
+SELECT 'Patients', COUNT(*) FROM patients
+UNION ALL
+SELECT 'Doctors', COUNT(*) FROM doctors
+UNION ALL
+SELECT 'Appointments', COUNT(*) FROM appointments
+UNION ALL
+SELECT 'Admissions', COUNT(*) FROM admissions
+UNION ALL
+SELECT 'Bills', COUNT(*) FROM bills;
 
-INSERT INTO user_roles (user_id, role)
-VALUES ((SELECT id FROM users WHERE username = 'admin'), 'ADMIN');
+-- Expected output:
+-- Users: 3
+-- Patients: 2
+-- Doctors: 1
+-- Appointments: 2
+-- Admissions: 1
+-- Bills: 2
 
--- Add more sample data as needed
+-- View demo patients
+SELECT patient_id, first_name, last_name, patient_type, blood_group 
+FROM patients;
+
+-- View active admission
+SELECT admission_number, p.patient_id, p.first_name, ward, room_number, b.bed_number, status
+FROM admissions adm
+JOIN patients p ON adm.patient_id = p.id
+JOIN beds b ON adm.current_bed_id = b.id
+WHERE adm.status = 'ADMITTED';
+
+-- Check ID generation counters
+SELECT module_prefix, date_key, last_sequence 
+FROM id_counter 
+ORDER BY module_prefix;
 ```
 
 ## Maintenance
