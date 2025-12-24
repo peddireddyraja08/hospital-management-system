@@ -18,11 +18,14 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import PageHeader from '../../components/PageHeader';
 import { useAuth } from '../../context/AuthContext';
+import { authAPI } from '../../services/api';
+import { useEffect } from 'react';
 
 export default function UserProfile() {
-  const { user } = useAuth();
+  const { user, updateLocalUser } = useAuth();
   const [editMode, setEditMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [saving, setSaving] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: user?.firstName || 'John',
@@ -43,9 +46,45 @@ export default function UserProfile() {
     });
   };
 
+  useEffect(() => {
+    let mounted = true;
+    authAPI.getProfile().then((res) => {
+      if (!mounted) return;
+      const p = res.data.data;
+      setFormData((f) => ({
+        ...f,
+        firstName: p.firstName || f.firstName,
+        lastName: p.lastName || f.lastName,
+        username: p.username || f.username,
+        email: p.email || f.email,
+        phone: p.phoneNumber || f.phone
+      }));
+      updateLocalUser({ username: p.username, email: p.email });
+      
+    }).catch(() => {
+    });
+    return () => { mounted = false; };
+  }, [updateLocalUser]);
+
   const handleSave = () => {
-    // TODO: Implement API call to update profile
-    setEditMode(false);
+    setSaving(true);
+    authAPI.updateProfile({
+      username: formData.username,
+      email: formData.email,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      phoneNumber: formData.phone
+    }).then((res) => {
+      const updated = res.data.data;
+      updateLocalUser({ username: updated.username, email: updated.email });
+      setFormData((f) => ({ ...f, firstName: updated.firstName || f.firstName, lastName: updated.lastName || f.lastName, email: updated.email || f.email }));
+      setEditMode(false);
+      setSaving(false);
+      alert('Profile updated successfully');
+    }).catch((err) => {
+      setSaving(false);
+      alert(err.response?.data?.message || 'Failed to update profile');
+    });
   };
 
   const handleCancel = () => {
@@ -200,6 +239,7 @@ export default function UserProfile() {
                   variant="contained"
                   startIcon={<SaveIcon />}
                   onClick={handleSave}
+                  disabled={saving}
                   sx={{ bgcolor: '#1565C0' }}
                 >
                   Save Changes
@@ -268,8 +308,27 @@ export default function UserProfile() {
               <Button
                 variant="contained"
                 sx={{ bgcolor: '#1565C0' }}
+                disabled={saving}
                 onClick={() => {
-                  // TODO: Implement password change API call
+                  if (!formData.currentPassword || !formData.newPassword) {
+                    alert('Please provide current and new passwords');
+                    return;
+                  }
+                  if (formData.newPassword !== formData.confirmPassword) {
+                    alert('New password and confirmation do not match');
+                    return;
+                  }
+                  setSaving(true);
+                  authAPI.changePassword({ currentPassword: formData.currentPassword, newPassword: formData.newPassword })
+                    .then(() => {
+                      setSaving(false);
+                      setFormData({ ...formData, currentPassword: '', newPassword: '', confirmPassword: '' });
+                      alert('Password updated successfully');
+                    })
+                    .catch((err) => {
+                      setSaving(false);
+                      alert(err.response?.data?.message || 'Failed to change password');
+                    });
                 }}
               >
                 Update Password

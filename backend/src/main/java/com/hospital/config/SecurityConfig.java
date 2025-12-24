@@ -37,11 +37,15 @@ public class SecurityConfig {
             .cors(cors -> cors.configure(http))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/auth/**",
+                    "/auth/login",
+                    "/auth/register",
+                    "/auth/refresh",
                     "/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
-                    "/actuator/**"
+                    "/actuator/**",
+                    "/pharmacy/prescriptions/*/dispense-simple",
+                    "/pharmacy/prescriptions/*/partial-dispense-simple"
                 ).permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/doctor/**").hasAnyRole("DOCTOR", "ADMIN")

@@ -13,7 +13,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && token.split('.').length === 3) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -40,6 +40,9 @@ export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   register: (userData) => api.post('/auth/register', userData),
   refreshToken: (refreshToken) => api.post('/auth/refresh', null, { params: { refreshToken } }),
+  getProfile: () => api.get('/auth/me'),
+  updateProfile: (profile) => api.put('/auth/me', profile),
+  changePassword: (payload) => api.post('/auth/change-password', payload),
 };
 
 // Patient API
@@ -170,7 +173,8 @@ export const bedAPI = {
 export const labTestAPI = {
   getAll: () => api.get('/lab-tests'),
   getById: (id) => api.get(`/lab-tests/${id}`),
-  getByTestCode: (testCode) => api.get(`/lab-tests/test-code/${testCode}`),
+  getByTestCode: (testCode) => api.get(`/lab-tests/code/${testCode}`),
+
   getByCategory: (category) => api.get(`/lab-tests/category/${category}`),
   getByDepartment: (department) => api.get(`/lab-tests/department/${department}`),
   getProfiles: () => api.get('/lab-tests/profiles'),
@@ -229,6 +233,46 @@ export const medicationAPI = {
   delete: (id) => api.delete(`/medications/${id}`),
 };
 
+// Pharmacy API (new)
+export const pharmacyAPI = {
+  listMedicines: () => api.get('/pharmacy/medicines'),
+  getMedicine: (id) => api.get(`/pharmacy/medicines/${id}`),
+  createMedicine: (payload) => api.post('/pharmacy/medicines', payload),
+  updateMedicine: (id, payload) => api.put(`/pharmacy/medicines/${id}`, payload),
+  deleteMedicine: (id) => api.delete(`/pharmacy/medicines/${id}`),
+  addBatch: (id, batch) => api.post(`/pharmacy/medicines/${id}/batches`, batch),
+  getBatches: (id) => api.get(`/pharmacy/medicines/${id}/batches`),
+  expiringSoon: (days = 7) => api.get('/pharmacy/reports/expiring', { params: { days } }),
+  lowStockReport: () => api.get('/pharmacy/reports/low-stock'),
+  dispense: (id, qty) => api.post(`/pharmacy/medicines/${id}/dispense`, null, { params: { qty } }),
+};
+
+// Pharmacy billing & prescription dispense
+export const pharmacyBillingAPI = {
+  dispensePrescription: (prescriptionId, dispensedBy, admissionId, visitId) => api.post(
+    `/pharmacy/prescriptions/${prescriptionId}/dispense`,
+    null,
+    { params: { dispensedBy, admissionId, visitId } }
+  ),
+  getBillsByPrescription: (prescriptionId) => api.get(`/pharmacy/bills/prescription/${prescriptionId}`),
+  getBillsByPatient: (patientId) => api.get(`/pharmacy/bills/patient/${patientId}`),
+  createBill: (payload) => api.post('/pharmacy/bills', payload),
+};
+
+// Simple pharmacy dispense APIs (no billing)
+export const pharmacyDispenseAPI = {
+  dispensePrescriptionSimple: (prescriptionId, dispensedBy = 'pharmacist') => api.post(
+    `/pharmacy/prescriptions/${prescriptionId}/dispense-simple`,
+    null,
+    { params: { dispensedBy } }
+  ),
+  partialDispenseSimple: (prescriptionId, quantity, dispensedBy = 'pharmacist') => api.post(
+    `/pharmacy/prescriptions/${prescriptionId}/partial-dispense-simple`,
+    null,
+    { params: { dispensedQuantity: quantity, dispensedBy } }
+  ),
+};
+
 // Prescription API
 export const prescriptionAPI = {
   getAll: () => api.get('/prescriptions'),
@@ -238,8 +282,12 @@ export const prescriptionAPI = {
   getByStatus: (status) => api.get(`/prescriptions/status/${status}`),
   create: (prescription) => api.post('/prescriptions', prescription),
   update: (id, prescription) => api.put(`/prescriptions/${id}`, prescription),
-  dispense: (id) => api.post(`/prescriptions/${id}/dispense`),
-  partialDispense: (id, quantity) => api.post(`/prescriptions/${id}/partial-dispense`, null, { params: { quantity } }),
+  dispense: (id, dispensedBy = 'pharmacist') => api.patch(`/prescriptions/${id}/dispense`, null, { params: { dispensedBy } }),
+  partialDispense: (id, quantity, dispensedBy = 'pharmacist', admissionId = null, visitId = null) => api.patch(
+    `/prescriptions/${id}/partial-dispense`,
+    null,
+    { params: { dispensedQuantity: quantity, dispensedBy, admissionId, visitId } }
+  ),
 };
 
 // Bill API

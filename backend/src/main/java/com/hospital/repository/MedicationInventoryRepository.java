@@ -9,7 +9,7 @@ import java.util.List;
 
 @Repository
 public interface MedicationInventoryRepository extends JpaRepository<MedicationInventory, Long> {
-    List<MedicationInventoryRepository> findByMedicationId(Long medicationId);
+    List<com.hospital.entity.MedicationInventory> findByMedicationId(Long medicationId);
     List<MedicationInventory> findByExpiryDateBefore(LocalDate date);
     List<MedicationInventory> findByIsExpired(Boolean isExpired);
 }

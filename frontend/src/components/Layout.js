@@ -150,7 +150,7 @@ const menuSections = [
     icon: <LocalPharmacyIcon />,
     items: [
       { text: 'Pharmacy Inventory', icon: <InventoryIcon />, path: '/pharmacy' },
-      { text: 'Dispensing', icon: <MedicationIcon />, path: '/pharmacy/dispensing' },
+      { text: 'Dispensing', icon: <MedicationIcon />, path: '/pharmacy/dispense' },
     ],
   },
   {

@@ -5,6 +5,13 @@ import com.hospital.dto.AuthResponse;
 import com.hospital.dto.LoginRequest;
 import com.hospital.dto.RegisterRequest;
 import com.hospital.service.AuthService;
+import com.hospital.repository.UserRepository;
+import com.hospital.entity.User;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
+import com.hospital.dto.ChangePasswordRequest;
+import com.hospital.dto.UserProfileDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -19,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
     @Operation(summary = "User login")
@@ -39,5 +48,54 @@ public class AuthController {
     public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@RequestParam String refreshToken) {
         AuthResponse response = authService.refreshToken(refreshToken);
         return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", response));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserProfileDTO>> getProfile(Authentication authentication) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        UserProfileDTO dto = new UserProfileDTO(user.getUsername(), user.getEmail(), user.getFirstName(), user.getLastName(), user.getPhoneNumber());
+        return ResponseEntity.ok(ApiResponse.success(dto));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<UserProfileDTO>> updateProfile(Authentication authentication, @Valid @RequestBody UserProfileDTO profile) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (profile.getEmail() != null && !profile.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(profile.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("Email already in use"));
+            }
+            user.setEmail(profile.getEmail());
+        }
+
+        if (profile.getFirstName() != null) user.setFirstName(profile.getFirstName());
+        if (profile.getLastName() != null) user.setLastName(profile.getLastName());
+        if (profile.getPhoneNumber() != null) user.setPhoneNumber(profile.getPhoneNumber());
+
+        userRepository.save(user);
+
+        UserProfileDTO dto = new UserProfileDTO(user.getUsername(), user.getEmail(), user.getFirstName(), user.getLastName(), user.getPhoneNumber());
+        return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", dto));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<String>> changePassword(Authentication authentication, @Valid @RequestBody ChangePasswordRequest req) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!passwordEncoder.matches(req.getCurrentPassword(), user.getPassword())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("Current password is incorrect"));
+        }
+
+        user.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        userRepository.save(user);
+
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
     }
 }

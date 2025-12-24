@@ -19,6 +19,7 @@ import CriticalAlerts from './pages/lab/CriticalAlerts';
 import QCMaterialsList from './pages/qc/QCMaterialsList';
 import QCDataEntry from './pages/qc/QCDataEntry';
 import PharmacyDashboard from './pages/pharmacy/PharmacyDashboard';
+import Dispensing from './pages/pharmacy/Dispensing';
 import BillingDashboard from './pages/billing/BillingDashboard';
 import Payments from './pages/billing/Payments';
 import BedManagement from './pages/beds/BedManagement';
@@ -98,6 +99,7 @@ function App() {
             <Route path="qc/materials" element={<QCMaterialsList />} />
             <Route path="qc/data-entry" element={<QCDataEntry />} />
             <Route path="pharmacy" element={<PharmacyDashboard />} />
+            <Route path="pharmacy/dispense" element={<Dispensing />} />
             <Route path="billing" element={<BillingDashboard />} />
             <Route path="payments" element={<Payments />} />
             <Route path="settings" element={<SystemSettings />} />

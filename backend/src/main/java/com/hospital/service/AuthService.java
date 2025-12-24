@@ -28,21 +28,20 @@ public class AuthService {
     private final CustomUserDetailsService userDetailsService;
 
     public AuthResponse login(LoginRequest request) {
-        System.out.println("========== LOGIN ATTEMPT ==========");
-        System.out.println("Username: " + request.getUsername());
-        System.out.println("Password: " + request.getPassword());
-        System.out.println("===================================");
-        
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = tokenProvider.generateToken(userDetails);
         String refreshToken = tokenProvider.generateRefreshToken(userDetails);
 
+        if (token == null || !token.contains(".")) {
+            throw new RuntimeException("Failed to generate valid JWT token");
+        }
+
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setLastLogin(java.time.LocalDateTime.now());
         userRepository.save(user);

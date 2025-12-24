@@ -20,13 +20,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login(credentials);
       const { token, refreshToken, username, email } = response.data.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('refreshToken', refreshToken);
-      localStorage.setItem('user', JSON.stringify({ username, email }));
-      
-      setUser({ username, email });
-      return { success: true };
+      if (token && token.split('.').length === 3) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('refreshToken', refreshToken);
+        localStorage.setItem('user', JSON.stringify({ username, email }));
+        setUser({ username, email });
+        return { success: true };
+      } else {
+        return {
+          success: false,
+          error: 'Invalid token received from server.'
+        };
+      }
     } catch (error) {
       return { 
         success: false, 
@@ -40,6 +45,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setUser(null);
+  };
+
+  const updateLocalUser = (userData) => {
+    const username = userData.username || user?.username;
+    const email = userData.email || user?.email;
+    const newUser = { username, email };
+    localStorage.setItem('user', JSON.stringify(newUser));
+    setUser(newUser);
   };
 
   const register = async (userData) => {
@@ -62,7 +75,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, register, loading, updateLocalUser }}>
       {children}
     </AuthContext.Provider>
   );

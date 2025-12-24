@@ -42,6 +42,9 @@ public class Prescription extends BaseEntity {
     @Column(name = "quantity")
     private Integer quantity;
 
+    @Column(name = "dispensed_quantity")
+    private Integer dispensedQuantity = 0;
+
     @Column(name = "instructions", columnDefinition = "TEXT")
     private String instructions;
 
